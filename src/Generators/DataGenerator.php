@@ -25,7 +25,7 @@ abstract class DataGenerator
         $this->options = $options;
         
         // Initialize Faker with seed if provided
-        $seed = $this->mint->getConfig('development.seed');
+        $seed = $this->mint->getConfig('development.seed') ?? null;
         $this->faker = FakerFactory::create();
         
         if ($seed !== null) {
@@ -80,7 +80,7 @@ abstract class DataGenerator
         $records = collect();
         
         for ($i = 0; $i < $size; $i++) {
-            $records->push($this->generateRecord($modelClass));
+            $records->push($this->generateRecord($modelClass, []));
             $this->generatedCount++;
         }
         

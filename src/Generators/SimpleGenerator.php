@@ -58,6 +58,32 @@ class SimpleGenerator extends DataGenerator
         $schemaAnalysis = $this->analysis['schema'] ?? [];
         $columns = $schemaAnalysis['columns'] ?? [];
         
+        // If no columns found in analysis, try to get them from the model
+        if (empty($columns)) {
+            try {
+                $instance = new $modelClass();
+                $fillable = $instance->getFillable();
+                
+                // If fillable is defined, use those columns
+                if (!empty($fillable)) {
+                    foreach ($fillable as $field) {
+                        $columns[$field] = ['type' => 'string', 'nullable' => false];
+                    }
+                } else {
+                    // Use some default columns
+                    $columns = [
+                        'name' => ['type' => 'string', 'nullable' => false],
+                        'value' => ['type' => 'integer', 'nullable' => true],
+                    ];
+                }
+            } catch (\Exception $e) {
+                // Default fallback columns
+                $columns = [
+                    'name' => ['type' => 'string', 'nullable' => false],
+                ];
+            }
+        }
+        
         // Get fillable fields
         $fillable = $modelAnalysis['fillable'] ?? [];
         $guarded = $modelAnalysis['guarded'] ?? [];
@@ -102,10 +128,11 @@ class SimpleGenerator extends DataGenerator
                 $record[$column] = $this->generateForeignKeyByPattern($column);
             } elseif ($this->isSpecialField($column)) {
                 // Handle special fields like status, order_number, etc.
-                $record[$column] = $this->generateSpecialField($column, $columns[$column]);
+                $record[$column] = $this->generateSpecialField($column, $columns[$column] ?? ['type' => 'string']);
             } else {
                 // Generate normal column value
-                $record[$column] = $this->generateColumnValue($column, $columns[$column]);
+                $columnDetails = $columns[$column] ?? ['type' => 'string', 'nullable' => false];
+                $record[$column] = $this->generateColumnValue($column, $columnDetails);
             }
         }
         

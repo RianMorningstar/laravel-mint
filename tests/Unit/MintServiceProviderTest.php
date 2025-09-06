@@ -36,8 +36,11 @@ class MintServiceProviderTest extends TestCase
             'mint:import',
         ];
 
+        // Get all registered commands
+        $registeredCommands = \Illuminate\Support\Facades\Artisan::all();
+        
         foreach ($commands as $command) {
-            $this->assertTrue($this->app['artisan']->has($command));
+            $this->assertArrayHasKey($command, $registeredCommands, "Command {$command} is not registered");
         }
     }
 }

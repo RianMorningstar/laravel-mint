@@ -44,7 +44,7 @@ class Mint
         ];
     }
 
-    public function generate(string $modelClass, int $count = 1, array $options = []): void
+    public function generate(string $modelClass, int $count = 1, array $options = []): \Illuminate\Support\Collection
     {
         $analysis = $this->analyze($modelClass);
         
@@ -55,13 +55,24 @@ class Mint
             $this->generator = new SimpleGenerator($this, $analysis);
         }
         
-        $this->generator->generate($modelClass, $count, $options);
+        return $this->generator->generate($modelClass, $count, $options);
     }
 
     public function generateWithScenario(string $scenario, array $options = []): void
     {
         $scenarioManager = new ScenarioManager($this);
         $scenarioManager->run($scenario, $options);
+    }
+    
+    public function generateBatch(array $batch): array
+    {
+        $results = [];
+        
+        foreach ($batch as $modelClass => $count) {
+            $results[$modelClass] = $this->generate($modelClass, $count);
+        }
+        
+        return $results;
     }
 
     public function clear(string $modelClass = null): int
@@ -121,5 +132,68 @@ class Mint
     public function getPatternRegistry(): PatternRegistry
     {
         return new PatternRegistry();
+    }
+    
+    public function generateWithPattern(string $modelClass, int $count, string $pattern, array $config = []): \Illuminate\Support\Collection
+    {
+        $options = array_merge($config, ['pattern' => $pattern]);
+        return $this->generate($modelClass, $count, $options);
+    }
+    
+    public function seed(string $seederClass): void
+    {
+        $seeder = new $seederClass();
+        $seeder->run();
+    }
+    
+    public function getStatistics(string $modelClass): array
+    {
+        $count = $modelClass::count();
+        $today = $modelClass::whereDate('created_at', today())->count();
+        
+        return [
+            'total_records' => $count,
+            'created_today' => $today,
+            'field_statistics' => [],
+        ];
+    }
+    
+    public function export(string $modelClass, string $path, string $format = 'json'): void
+    {
+        $data = $modelClass::all()->toArray();
+        
+        if ($format === 'json') {
+            file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT));
+        } elseif ($format === 'csv') {
+            $fp = fopen($path, 'w');
+            if (!empty($data)) {
+                fputcsv($fp, array_keys($data[0]));
+                foreach ($data as $row) {
+                    fputcsv($fp, $row);
+                }
+            }
+            fclose($fp);
+        }
+    }
+    
+    public function import(string $modelClass, string $path, string $format = 'json'): array
+    {
+        if ($format === 'json') {
+            $data = json_decode(file_get_contents($path), true);
+            foreach ($data as $row) {
+                $modelClass::create($row);
+            }
+            return ['imported' => count($data)];
+        }
+        
+        return ['imported' => 0];
+    }
+    
+    public function runScenario(string $scenario, array $options = []): array
+    {
+        $scenarioManager = new ScenarioManager($this);
+        $result = $scenarioManager->run($scenario, $options);
+        
+        return $result->toArray();
     }
 }

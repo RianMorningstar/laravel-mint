@@ -206,8 +206,14 @@ class ScenarioBuilder
     /**
      * Build and return the scenario configuration
      */
-    public function build(): array
+    public function build(array $config = []): mixed
     {
+        // If config is provided, build scenario from it
+        if (!empty($config)) {
+            return $this->buildFromConfig($config);
+        }
+        
+        // Otherwise return the configuration array
         return [
             'name' => $this->name,
             'models' => $this->models,
@@ -218,6 +224,30 @@ class ScenarioBuilder
             'relationships' => $this->relationships,
             'config' => $this->config,
         ];
+    }
+    
+    /**
+     * Build a scenario from configuration
+     */
+    protected function buildFromConfig(array $config): ScenarioInterface
+    {
+        $this->name = $config['name'] ?? 'custom-scenario';
+        
+        // Set up models from steps
+        if (isset($config['steps'])) {
+            foreach ($config['steps'] as $step) {
+                if (isset($step['model']) && isset($step['count'])) {
+                    $this->models[] = [
+                        'class' => $step['model'],
+                        'count' => $step['count'],
+                        'attributes' => $step['attributes'] ?? [],
+                        'relationships' => $step['relationships'] ?? [],
+                    ];
+                }
+            }
+        }
+        
+        return new CustomScenario($this->mint, $this->build());
     }
 
     /**
