@@ -8,7 +8,9 @@ use LaravelMint\Analyzers\SchemaInspector;
 use LaravelMint\Analyzers\RelationshipMapper;
 use LaravelMint\Generators\DataGenerator;
 use LaravelMint\Generators\SimpleGenerator;
+use LaravelMint\Generators\PatternAwareGenerator;
 use LaravelMint\Scenarios\ScenarioManager;
+use LaravelMint\Patterns\PatternRegistry;
 
 class Mint
 {
@@ -46,7 +48,13 @@ class Mint
     {
         $analysis = $this->analyze($modelClass);
         
-        $this->generator = new SimpleGenerator($this, $analysis);
+        // Use PatternAwareGenerator if patterns are specified
+        if ($this->hasPatterns($options)) {
+            $this->generator = new PatternAwareGenerator($this, $analysis, $options);
+        } else {
+            $this->generator = new SimpleGenerator($this, $analysis);
+        }
+        
         $this->generator->generate($modelClass, $count, $options);
     }
 
@@ -94,5 +102,24 @@ class Mint
     public function getRelationshipMapper(): RelationshipMapper
     {
         return $this->relationshipMapper;
+    }
+
+    /**
+     * Check if options contain patterns
+     */
+    protected function hasPatterns(array $options): bool
+    {
+        return isset($options['patterns']) || 
+               isset($options['column_patterns']) || 
+               isset($options['model_patterns']) ||
+               isset($options['use_patterns']);
+    }
+
+    /**
+     * Get pattern registry
+     */
+    public function getPatternRegistry(): PatternRegistry
+    {
+        return new PatternRegistry();
     }
 }

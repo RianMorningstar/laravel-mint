@@ -7,6 +7,8 @@ use LaravelMint\Commands\AnalyzeCommand;
 use LaravelMint\Commands\GenerateCommand;
 use LaravelMint\Commands\ClearCommand;
 use LaravelMint\Commands\ImportCommand;
+use LaravelMint\Commands\PatternListCommand;
+use LaravelMint\Commands\PatternShowCommand;
 
 class MintServiceProvider extends ServiceProvider
 {
@@ -37,6 +39,8 @@ class MintServiceProvider extends ServiceProvider
                 GenerateCommand::class,
                 ClearCommand::class,
                 ImportCommand::class,
+                PatternListCommand::class,
+                PatternShowCommand::class,
             ]);
         }
     }

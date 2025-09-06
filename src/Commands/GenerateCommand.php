@@ -20,7 +20,10 @@ class GenerateCommand extends Command
                             {--with-relationships : Generate related models}
                             {--truncate : Truncate table before generating}
                             {--silent : Suppress output}
-                            {--seed= : Seed for random generation}';
+                            {--seed= : Seed for random generation}
+                            {--use-patterns : Enable pattern-based generation}
+                            {--column-patterns= : JSON string of column patterns}
+                            {--pattern-config= : Path to pattern configuration file}';
 
     /**
      * The console command description.
@@ -77,13 +80,44 @@ class GenerateCommand extends Command
                 $this->truncateTable($modelClass);
             }
             
-            // Set seed if provided
+            // Build options array
             $options = [];
             if ($seed) {
                 $options['seed'] = $seed;
             }
             if ($silent) {
                 $options['silent'] = true;
+            }
+            
+            // Handle pattern options
+            if ($this->option('use-patterns')) {
+                $options['use_patterns'] = true;
+                
+                // Parse column patterns from JSON
+                if ($columnPatterns = $this->option('column-patterns')) {
+                    $options['column_patterns'] = json_decode($columnPatterns, true);
+                    
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $this->error('Invalid JSON in column-patterns option: ' . json_last_error_msg());
+                        return 1;
+                    }
+                }
+                
+                // Load pattern config from file
+                if ($configFile = $this->option('pattern-config')) {
+                    if (!file_exists($configFile)) {
+                        $this->error("Pattern config file not found: {$configFile}");
+                        return 1;
+                    }
+                    
+                    $config = json_decode(file_get_contents($configFile), true);
+                    if (json_last_error() !== JSON_ERROR_NONE) {
+                        $this->error('Invalid JSON in pattern config file: ' . json_last_error_msg());
+                        return 1;
+                    }
+                    
+                    $options = array_merge($options, $config);
+                }
             }
             
             // Start timing
