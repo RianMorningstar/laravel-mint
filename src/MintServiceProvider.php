@@ -9,6 +9,9 @@ use LaravelMint\Commands\ClearCommand;
 use LaravelMint\Commands\ImportCommand;
 use LaravelMint\Commands\PatternListCommand;
 use LaravelMint\Commands\PatternShowCommand;
+use LaravelMint\Console\Commands\ScenarioRunCommand;
+use LaravelMint\Console\Commands\ScenarioListCommand;
+use LaravelMint\Scenarios\ScenarioRunner;
 
 class MintServiceProvider extends ServiceProvider
 {
@@ -20,6 +23,10 @@ class MintServiceProvider extends ServiceProvider
 
         $this->app->singleton('mint', function ($app) {
             return new Mint($app);
+        });
+
+        $this->app->singleton(ScenarioRunner::class, function ($app) {
+            return new ScenarioRunner($app->make('mint'));
         });
     }
 
@@ -41,6 +48,8 @@ class MintServiceProvider extends ServiceProvider
                 ImportCommand::class,
                 PatternListCommand::class,
                 PatternShowCommand::class,
+                ScenarioRunCommand::class,
+                ScenarioListCommand::class,
             ]);
         }
     }
