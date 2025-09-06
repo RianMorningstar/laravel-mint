@@ -29,7 +29,13 @@ class SimpleGenerator extends DataGenerator
         $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass) {
             // Insert chunk into database
             $this->insertRecords($modelClass, $chunk);
-            $generated = $generated->merge($chunk);
+            
+            // Fetch the created models from database
+            // Get the IDs of the last inserted records
+            $insertedCount = count($chunk);
+            $models = $modelClass::orderBy('id', 'desc')->take($insertedCount)->get()->reverse()->values();
+            
+            $generated = $generated->merge($models);
             
             if (php_sapi_name() === 'cli') {
                 $this->updateProgress($current, $total);

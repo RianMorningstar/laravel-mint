@@ -37,10 +37,22 @@ class Mint
         $schemaAnalysis = $this->schemaInspector->inspect($modelClass);
         $relationships = $this->relationshipMapper->map($modelClass);
         
+        // Get the table name
+        $table = '';
+        try {
+            $instance = new $modelClass();
+            $table = $instance->getTable();
+        } catch (\Exception $e) {
+            // Default to pluralized lowercase model name
+            $table = strtolower(class_basename($modelClass)) . 's';
+        }
+        
         return [
             'model' => $modelAnalysis,
             'schema' => $schemaAnalysis,
             'relationships' => $relationships,
+            'table' => $table,
+            'attributes' => $schemaAnalysis['columns'] ?? [],
         ];
     }
 

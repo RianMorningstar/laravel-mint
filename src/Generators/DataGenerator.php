@@ -79,8 +79,17 @@ abstract class DataGenerator
     {
         $records = collect();
         
+        // Extract custom attributes from options
+        $customAttributes = [];
+        foreach ($this->options as $key => $value) {
+            // Skip known option keys
+            if (!in_array($key, ['silent', 'chunk', 'pattern', 'patterns', 'with-relationships'])) {
+                $customAttributes[$key] = $value;
+            }
+        }
+        
         for ($i = 0; $i < $size; $i++) {
-            $records->push($this->generateRecord($modelClass, []));
+            $records->push($this->generateRecord($modelClass, $customAttributes));
             $this->generatedCount++;
         }
         

@@ -52,7 +52,11 @@ class TestModelFactory
                 // Add foreign keys for relationships
                 foreach ($relationships as $relation => $config) {
                     if ($config['type'] === 'belongsTo') {
-                        $table->foreignId($config['foreign_key'] ?? "{$relation}_id")->nullable();
+                        $foreignKey = $config['foreign_key'] ?? "{$relation}_id";
+                        // Check if column already exists to avoid duplicates
+                        if (!isset($attributes[$foreignKey])) {
+                            $table->foreignId($foreignKey)->nullable();
+                        }
                     }
                 }
                 
