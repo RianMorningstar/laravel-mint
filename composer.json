@@ -1,0 +1,49 @@
+{
+    "name": "argent/laravel-mint",
+    "description": "Realistic test data generator for Laravel.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "LaravelMint\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Argent",
+            "email": "jdavmiller90@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0",
+        "illuminate/database": "^11.0|^12.0",
+        "illuminate/console": "^11.0|^12.0",
+        "fakerphp/faker": "^1.23"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0",
+        "laravel/pint": "^1.18"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "LaravelMint\\MintServiceProvider"
+            ],
+            "aliases": {
+                "Mint": "LaravelMint\\Facades\\Mint"
+            }
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LaravelMint\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "format": "vendor/bin/pint"
+    }
+}
