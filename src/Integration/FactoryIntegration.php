@@ -3,22 +3,25 @@
 namespace LaravelMint\Integration;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use LaravelMint\Patterns\PatternRegistry;
 use LaravelMint\Mint;
+use LaravelMint\Patterns\PatternRegistry;
 
 class FactoryIntegration
 {
     protected Mint $mint;
+
     protected PatternRegistry $patternRegistry;
+
     protected array $states = [];
+
     protected array $sequences = [];
-    
-    public function __construct(Mint $mint = null)
+
+    public function __construct(?Mint $mint = null)
     {
         $this->mint = $mint ?? app('mint');
-        $this->patternRegistry = new PatternRegistry();
+        $this->patternRegistry = new PatternRegistry;
     }
-    
+
     /**
      * Enhance existing factory with patterns
      */
@@ -26,7 +29,7 @@ class FactoryIntegration
     {
         return new EnhancedFactory($factory, $this);
     }
-    
+
     /**
      * Create pattern-based state
      */
@@ -50,31 +53,32 @@ class FactoryIntegration
                     $attributes[$field] = $patternConfig($attributes);
                 }
             }
-            
+
             return $attributes;
         };
     }
-    
+
     /**
      * Create sequence with patterns
      */
     public function createSequence(array $values): callable
     {
         $index = 0;
-        
+
         return function () use (&$index, $values) {
             $value = $values[$index % count($values)];
             $index++;
-            
+
             if (is_array($value) && isset($value['pattern'])) {
                 $pattern = $this->patternRegistry->make($value['pattern'], $value);
+
                 return $pattern->generate();
             }
-            
+
             return $value;
         };
     }
-    
+
     /**
      * Generate factory with relationships
      */
@@ -92,81 +96,83 @@ class FactoryIntegration
                 $count = $config['count'] ?? 1;
                 $factoryMethod = $config['factory'] ?? null;
                 $attributes = $config['attributes'] ?? [];
-                
+
                 $relationFactory = $this->getRelationFactory($relation, $factory);
-                
+
                 if ($factoryMethod) {
                     $relationFactory = $relationFactory->$factoryMethod();
                 }
-                
-                if (!empty($attributes)) {
+
+                if (! empty($attributes)) {
                     $relationFactory = $relationFactory->state($attributes);
                 }
-                
+
                 $factory = $factory->has($relationFactory->count($count), $relation);
             }
         }
-        
+
         return $factory;
     }
-    
+
     /**
      * Apply temporal patterns to factory
      */
     public function withTemporalPattern(Factory $factory, string $field, array $config): Factory
     {
         $pattern = $this->patternRegistry->make('temporal', $config);
-        
+
         return $factory->state(function (array $attributes) use ($field, $pattern) {
             $attributes[$field] = $pattern->generate();
+
             return $attributes;
         });
     }
-    
+
     /**
      * Apply distribution pattern to factory
      */
     public function withDistribution(Factory $factory, string $field, string $distribution, array $params = []): Factory
     {
         $pattern = $this->patternRegistry->make($distribution, $params);
-        
+
         return $factory->state(function (array $attributes) use ($field, $pattern) {
             $attributes[$field] = $pattern->generate();
+
             return $attributes;
         });
     }
-    
+
     /**
      * Create realistic dataset using factory
      */
     public function createRealisticDataset(string $modelClass, int $count, array $config = []): array
     {
         $factory = $modelClass::factory();
-        
+
         // Apply patterns
         if (isset($config['patterns'])) {
             foreach ($config['patterns'] as $field => $patternConfig) {
                 $factory = $this->applyPattern($factory, $field, $patternConfig);
             }
         }
-        
+
         // Apply states
         if (isset($config['states'])) {
             foreach ($config['states'] as $state => $percentage) {
-                $stateCount = (int)($count * $percentage);
+                $stateCount = (int) ($count * $percentage);
                 $factory = $factory->count($stateCount)->state($state);
             }
         }
-        
+
         // Apply relationships
         if (isset($config['relationships'])) {
             $factory = $this->withRelationships($factory, $config['relationships']);
         }
-        
+
         // Create records
         return $factory->count($count)->create()->toArray();
     }
-    
+
     /**
      * Apply pattern to factory
      */
@@ -176,40 +182,40 @@ class FactoryIntegration
             // Simple pattern name
             return $this->withDistribution($factory, $field, $patternConfig);
         }
-        
+
         if (is_array($patternConfig)) {
             $type = $patternConfig['type'] ?? 'normal';
-            
-            return match($type) {
+
+            return match ($type) {
                 'temporal' => $this->withTemporalPattern($factory, $field, $patternConfig),
                 'sequence' => $factory->sequence($this->createSequence($patternConfig['values'] ?? [])),
                 default => $this->withDistribution($factory, $field, $type, $patternConfig),
             };
         }
-        
+
         return $factory;
     }
-    
+
     /**
      * Get relation factory
      */
     protected function getRelationFactory(string $relation, Factory $factory)
     {
         $model = $factory->modelName();
-        $instance = new $model();
-        
+        $instance = new $model;
+
         if (method_exists($instance, $relation)) {
             $relationInstance = $instance->$relation();
             $relatedModel = get_class($relationInstance->getRelated());
-            
+
             if (method_exists($relatedModel, 'factory')) {
                 return $relatedModel::factory();
             }
         }
-        
+
         throw new \RuntimeException("Cannot find factory for relation: {$relation}");
     }
-    
+
     /**
      * Register custom state
      */
@@ -217,7 +223,7 @@ class FactoryIntegration
     {
         $this->states[$name] = $state;
     }
-    
+
     /**
      * Get registered state
      */
@@ -233,16 +239,19 @@ class FactoryIntegration
 class EnhancedFactory
 {
     protected Factory $factory;
+
     protected FactoryIntegration $integration;
+
     protected array $patterns = [];
+
     protected array $distributions = [];
-    
+
     public function __construct(Factory $factory, FactoryIntegration $integration)
     {
         $this->factory = $factory;
         $this->integration = $integration;
     }
-    
+
     /**
      * Add pattern to field
      */
@@ -250,9 +259,10 @@ class EnhancedFactory
     {
         $this->patterns[$field] = ['pattern' => $pattern, 'config' => $config];
         $this->applyPatterns();
+
         return $this;
     }
-    
+
     /**
      * Add distribution to field
      */
@@ -260,9 +270,10 @@ class EnhancedFactory
     {
         $this->distributions[$field] = ['type' => $type, 'params' => $params];
         $this->applyDistributions();
+
         return $this;
     }
-    
+
     /**
      * Add normal distribution
      */
@@ -273,7 +284,7 @@ class EnhancedFactory
             'stddev' => $stddev,
         ]);
     }
-    
+
     /**
      * Add Pareto distribution
      */
@@ -284,7 +295,7 @@ class EnhancedFactory
             'alpha' => $alpha,
         ]);
     }
-    
+
     /**
      * Add temporal pattern
      */
@@ -295,7 +306,7 @@ class EnhancedFactory
             'end' => $end,
         ]);
     }
-    
+
     /**
      * Add seasonal pattern
      */
@@ -306,16 +317,17 @@ class EnhancedFactory
             'amplitude' => $amplitude,
         ]);
     }
-    
+
     /**
      * With realistic relationships
      */
     public function withRealisticRelationships(array $config): self
     {
         $this->factory = $this->integration->withRelationships($this->factory, $config);
+
         return $this;
     }
-    
+
     /**
      * Apply patterns to factory
      */
@@ -327,7 +339,7 @@ class EnhancedFactory
             );
         }
     }
-    
+
     /**
      * Apply distributions to factory
      */
@@ -342,7 +354,7 @@ class EnhancedFactory
             );
         }
     }
-    
+
     /**
      * Create records
      */
@@ -350,7 +362,7 @@ class EnhancedFactory
     {
         return $this->factory->create($attributes, $parent);
     }
-    
+
     /**
      * Make records
      */
@@ -358,28 +370,30 @@ class EnhancedFactory
     {
         return $this->factory->make($attributes, $parent);
     }
-    
+
     /**
      * Count records
      */
     public function count(?int $count = null)
     {
         $this->factory = $this->factory->count($count);
+
         return $this;
     }
-    
+
     /**
      * Forward other methods to factory
      */
     public function __call($method, $parameters)
     {
         $result = $this->factory->$method(...$parameters);
-        
+
         if ($result instanceof Factory) {
             $this->factory = $result;
+
             return $this;
         }
-        
+
         return $result;
     }
 }

@@ -9,20 +9,20 @@ use Illuminate\Support\Facades\Schema;
 class TestModelFactory
 {
     protected static array $createdModels = [];
-    
+
     /**
      * Create a test model class dynamically
      */
     public static function create(string $modelName, array $attributes = [], array $relationships = []): string
     {
         $className = "Test{$modelName}Model";
-        $tableName = strtolower($modelName) . 's';
-        
+        $tableName = strtolower($modelName).'s';
+
         // Create the table
-        if (!Schema::hasTable($tableName)) {
+        if (! Schema::hasTable($tableName)) {
             Schema::create($tableName, function (Blueprint $table) use ($attributes, $relationships) {
                 $table->id();
-                
+
                 foreach ($attributes as $name => $type) {
                     switch ($type) {
                         case 'string':
@@ -48,49 +48,49 @@ class TestModelFactory
                             break;
                     }
                 }
-                
+
                 // Add foreign keys for relationships
                 foreach ($relationships as $relation => $config) {
                     if ($config['type'] === 'belongsTo') {
                         $foreignKey = $config['foreign_key'] ?? "{$relation}_id";
                         // Check if column already exists to avoid duplicates
-                        if (!isset($attributes[$foreignKey])) {
+                        if (! isset($attributes[$foreignKey])) {
                             $table->foreignId($foreignKey)->nullable();
                         }
                     }
                 }
-                
+
                 $table->timestamps();
             });
         }
-        
+
         // Create the model class if it doesn't exist
-        if (!class_exists($className)) {
+        if (! class_exists($className)) {
             $fillableFields = array_keys($attributes);
             eval("
                 class {$className} extends \Illuminate\Database\Eloquent\Model {
                     protected \$table = '{$tableName}';
                     protected \$guarded = [];
-                    protected \$fillable = " . var_export($fillableFields, true) . ";
-                    protected \$casts = " . var_export(self::getCasts($attributes), true) . ";
+                    protected \$fillable = ".var_export($fillableFields, true).';
+                    protected $casts = '.var_export(self::getCasts($attributes), true).';
                     
-                    " . self::generateRelationshipMethods($relationships, $className) . "
+                    '.self::generateRelationshipMethods($relationships, $className).'
                     
                     public function getSchemaColumns() {
-                        return " . var_export($attributes, true) . ";
+                        return '.var_export($attributes, true).';
                     }
                 }
-            ");
+            ');
         }
-        
+
         self::$createdModels[] = $className;
-        
+
         // Register inverse relationships
         self::registerInverseRelationships($className, $relationships);
-        
+
         return $className;
     }
-    
+
     /**
      * Clean up created models and tables
      */
@@ -100,17 +100,17 @@ class TestModelFactory
             $instance = new $className;
             Schema::dropIfExists($instance->getTable());
         }
-        
+
         self::$createdModels = [];
     }
-    
+
     /**
      * Get casts array for attributes
      */
     protected static function getCasts(array $attributes): array
     {
         $casts = [];
-        
+
         foreach ($attributes as $name => $type) {
             switch ($type) {
                 case 'boolean':
@@ -130,31 +130,31 @@ class TestModelFactory
                     break;
             }
         }
-        
+
         return $casts;
     }
-    
+
     /**
      * Generate relationship method definitions
      */
     protected static function generateRelationshipMethods(array $relationships, string $currentClass): string
     {
         $methods = [];
-        
+
         foreach ($relationships as $relation => $config) {
             $type = $config['type'];
             $related = $config['model'];
-            
+
             switch ($type) {
                 case 'hasMany':
                     // Determine the foreign key
                     $foreignKey = $config['foreign_key'] ?? null;
-                    if (!$foreignKey) {
+                    if (! $foreignKey) {
                         // Try to guess based on relation name
                         if ($relation === 'orders') {
                             $foreignKey = 'customer_id';
                         } else {
-                            $foreignKey = strtolower(str_replace('Test', '', str_replace('Model', '', $currentClass))) . '_id';
+                            $foreignKey = strtolower(str_replace('Test', '', str_replace('Model', '', $currentClass))).'_id';
                         }
                     }
                     $methods[] = "
@@ -186,10 +186,10 @@ class TestModelFactory
                     break;
             }
         }
-        
+
         return implode("\n", $methods);
     }
-    
+
     /**
      * Register inverse relationships on related models
      */
@@ -198,7 +198,7 @@ class TestModelFactory
         // Store inverse relationships for later use
         // This is a simplified approach - in production you'd handle this differently
     }
-    
+
     /**
      * Create a model with sample data
      */
@@ -206,19 +206,19 @@ class TestModelFactory
     {
         $className = self::create($modelName, $attributes);
         $instances = [];
-        
+
         for ($i = 0; $i < $count; $i++) {
             $data = [];
             foreach ($attributes as $name => $type) {
                 $data[$name] = self::generateSampleData($type, $name);
             }
-            
+
             $instances[] = $className::create($data);
         }
-        
+
         return $instances;
     }
-    
+
     /**
      * Generate sample data based on type
      */

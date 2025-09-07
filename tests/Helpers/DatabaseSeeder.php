@@ -3,8 +3,8 @@
 namespace LaravelMint\Tests\Helpers;
 
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class DatabaseSeeder
 {
@@ -23,7 +23,7 @@ class DatabaseSeeder
             $table->string('remember_token')->nullable();
             $table->timestamps();
         });
-        
+
         // Create posts table
         Schema::create('posts', function (Blueprint $table) {
             $table->id();
@@ -35,7 +35,7 @@ class DatabaseSeeder
             $table->timestamp('published_at')->nullable();
             $table->timestamps();
         });
-        
+
         // Create comments table
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
@@ -45,7 +45,7 @@ class DatabaseSeeder
             $table->boolean('is_approved')->default(false);
             $table->timestamps();
         });
-        
+
         // Create categories table
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
@@ -54,7 +54,7 @@ class DatabaseSeeder
             $table->text('description')->nullable();
             $table->timestamps();
         });
-        
+
         // Create post_categories pivot table
         Schema::create('post_categories', function (Blueprint $table) {
             $table->id();
@@ -62,7 +62,7 @@ class DatabaseSeeder
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->unique(['post_id', 'category_id']);
         });
-        
+
         // Create products table (for e-commerce testing)
         Schema::create('products', function (Blueprint $table) {
             $table->id();
@@ -75,7 +75,7 @@ class DatabaseSeeder
             $table->json('attributes')->nullable();
             $table->timestamps();
         });
-        
+
         // Create orders table
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
@@ -87,7 +87,7 @@ class DatabaseSeeder
             $table->timestamp('shipped_at')->nullable();
             $table->timestamps();
         });
-        
+
         // Create order_items table
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
@@ -98,14 +98,14 @@ class DatabaseSeeder
             $table->timestamps();
         });
     }
-    
+
     /**
      * Seed test database with sample data
      */
     public static function seedTestData(): array
     {
         $data = [];
-        
+
         // Create users
         $users = [];
         for ($i = 1; $i <= 10; $i++) {
@@ -118,7 +118,7 @@ class DatabaseSeeder
             ]);
         }
         $data['users'] = $users;
-        
+
         // Create categories
         $categories = [];
         $categoryNames = ['Technology', 'Science', 'Business', 'Health', 'Entertainment'];
@@ -132,7 +132,7 @@ class DatabaseSeeder
             ]);
         }
         $data['categories'] = $categories;
-        
+
         // Create posts
         $posts = [];
         for ($i = 1; $i <= 30; $i++) {
@@ -148,15 +148,15 @@ class DatabaseSeeder
             ]);
         }
         $data['posts'] = $posts;
-        
+
         // Create post-category relationships
         foreach ($posts as $postId) {
             $numCategories = rand(1, 3);
             $assignedCategories = array_rand(array_flip($categories), $numCategories);
-            if (!is_array($assignedCategories)) {
+            if (! is_array($assignedCategories)) {
                 $assignedCategories = [$assignedCategories];
             }
-            
+
             foreach ($assignedCategories as $categoryId) {
                 DB::table('post_categories')->insert([
                     'post_id' => $postId,
@@ -164,7 +164,7 @@ class DatabaseSeeder
                 ]);
             }
         }
-        
+
         // Create comments
         $comments = [];
         foreach ($posts as $postId) {
@@ -181,13 +181,13 @@ class DatabaseSeeder
             }
         }
         $data['comments'] = $comments;
-        
+
         // Create products
         $products = [];
         for ($i = 1; $i <= 20; $i++) {
             $products[] = DB::table('products')->insertGetId([
                 'name' => "Product {$i}",
-                'sku' => "SKU-" . str_pad($i, 5, '0', STR_PAD_LEFT),
+                'sku' => 'SKU-'.str_pad($i, 5, '0', STR_PAD_LEFT),
                 'description' => "Description for product {$i}",
                 'price' => rand(1000, 50000) / 100,
                 'stock' => rand(0, 100),
@@ -201,13 +201,13 @@ class DatabaseSeeder
             ]);
         }
         $data['products'] = $products;
-        
+
         // Create orders
         $orders = [];
         for ($i = 1; $i <= 15; $i++) {
             $orderId = DB::table('orders')->insertGetId([
                 'user_id' => $users[array_rand($users)],
-                'order_number' => 'ORD-' . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'order_number' => 'ORD-'.str_pad($i, 6, '0', STR_PAD_LEFT),
                 'total' => 0, // Will update after adding items
                 'status' => ['pending', 'processing', 'shipped', 'delivered'][rand(0, 3)],
                 'shipping_address' => json_encode([
@@ -220,21 +220,21 @@ class DatabaseSeeder
                 'created_at' => now()->subDays(rand(1, 30)),
                 'updated_at' => now(),
             ]);
-            
+
             // Add order items
             $orderTotal = 0;
             $numItems = rand(1, 5);
             $selectedProducts = array_rand(array_flip($products), $numItems);
-            if (!is_array($selectedProducts)) {
+            if (! is_array($selectedProducts)) {
                 $selectedProducts = [$selectedProducts];
             }
-            
+
             foreach ($selectedProducts as $productId) {
                 $product = DB::table('products')->find($productId);
                 $quantity = rand(1, 3);
                 $itemPrice = $product->price;
                 $orderTotal += $itemPrice * $quantity;
-                
+
                 DB::table('order_items')->insert([
                     'order_id' => $orderId,
                     'product_id' => $productId,
@@ -244,16 +244,16 @@ class DatabaseSeeder
                     'updated_at' => now(),
                 ]);
             }
-            
+
             // Update order total
             DB::table('orders')->where('id', $orderId)->update(['total' => $orderTotal]);
             $orders[] = $orderId;
         }
         $data['orders'] = $orders;
-        
+
         return $data;
     }
-    
+
     /**
      * Clean up test database
      */

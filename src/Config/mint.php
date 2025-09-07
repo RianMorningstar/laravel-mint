@@ -10,7 +10,7 @@ return [
     | chunk sizes, memory limits, and performance optimization settings.
     |
     */
-    
+
     'generation' => [
         'chunk_size' => env('MINT_CHUNK_SIZE', 1000),
         'memory_limit' => env('MINT_MEMORY_LIMIT', '512M'),
@@ -28,7 +28,7 @@ return [
     | statistical distributions and temporal patterns.
     |
     */
-    
+
     'patterns' => [
         'path' => base_path('patterns'),
         'cache' => env('MINT_CACHE_PATTERNS', true),
@@ -46,7 +46,7 @@ return [
     | Configuration for pre-built scenarios and custom scenario definitions.
     |
     */
-    
+
     'scenarios' => [
         'default' => env('MINT_DEFAULT_SCENARIO', 'simple'),
         'path' => base_path('scenarios'),
@@ -61,7 +61,7 @@ return [
     | Settings for automatic model analysis and relationship detection.
     |
     */
-    
+
     'analysis' => [
         'cache_results' => env('MINT_CACHE_ANALYSIS', true),
         'cache_duration' => 3600, // seconds
@@ -79,7 +79,7 @@ return [
     | Database-specific configuration for optimized data generation.
     |
     */
-    
+
     'database' => [
         'connection' => env('MINT_DB_CONNECTION', config('database.default')),
         'use_insert_ignore' => false,
@@ -95,13 +95,13 @@ return [
     | Configuration for data anonymization when importing production data.
     |
     */
-    
+
     'anonymization' => [
         'enabled' => env('MINT_ANONYMIZATION_ENABLED', true),
         'compliance_level' => env('MINT_COMPLIANCE_LEVEL', 'standard'), // standard, gdpr, hipaa, pci
         'preserve_statistics' => true,
         'hash_seed' => env('MINT_HASH_SEED', 'mint-default-seed'),
-        
+
         'sensitive_fields' => [
             'email',
             'phone',
@@ -112,7 +112,7 @@ return [
             'secret',
             'token',
         ],
-        
+
         'strategies' => [
             'email' => 'email_hash',
             'phone' => 'phone_mask',
@@ -130,7 +130,7 @@ return [
     | Settings for monitoring and reporting generation performance.
     |
     */
-    
+
     'monitoring' => [
         'enabled' => env('MINT_MONITORING_ENABLED', false),
         'log_channel' => env('MINT_LOG_CHANNEL', 'daily'),
@@ -147,7 +147,7 @@ return [
     | Settings specific to development and testing environments.
     |
     */
-    
+
     'development' => [
         'seed' => env('MINT_SEED', null),
         'debug' => env('MINT_DEBUG', false),

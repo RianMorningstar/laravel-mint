@@ -7,18 +7,20 @@ use LaravelMint\Patterns\AbstractPattern;
 class ExponentialDistribution extends AbstractPattern implements DistributionInterface
 {
     protected float $lambda; // Rate parameter
+
     protected ?float $min;
+
     protected ?float $max;
 
     protected function initialize(): void
     {
         $this->name = 'Exponential Distribution';
         $this->description = 'Generates values following an exponential distribution (time between events)';
-        
+
         $this->lambda = $this->getConfig('lambda', 1);
         $this->min = $this->getConfig('min', 0);
         $this->max = $this->getConfig('max');
-        
+
         $this->parameters = [
             'lambda' => [
                 'type' => 'float',
@@ -49,7 +51,7 @@ class ExponentialDistribution extends AbstractPattern implements DistributionInt
         // Inverse transform sampling
         $u = $this->faker->randomFloat(6, 0.000001, 0.999999);
         $value = -log(1 - $u) / $this->lambda;
-        
+
         // Apply bounds
         return $this->clamp($value, $this->min, $this->max);
     }
@@ -63,6 +65,7 @@ class ExponentialDistribution extends AbstractPattern implements DistributionInt
         for ($i = 0; $i < $count; $i++) {
             $samples[] = $this->generate();
         }
+
         return $samples;
     }
 
@@ -98,7 +101,7 @@ class ExponentialDistribution extends AbstractPattern implements DistributionInt
         if ($x < 0) {
             return 0;
         }
-        
+
         return $this->lambda * exp(-$this->lambda * $x);
     }
 
@@ -110,7 +113,7 @@ class ExponentialDistribution extends AbstractPattern implements DistributionInt
         if ($x < 0) {
             return 0;
         }
-        
+
         return 1 - exp(-$this->lambda * $x);
     }
 
@@ -138,15 +141,15 @@ class ExponentialDistribution extends AbstractPattern implements DistributionInt
         if (isset($config['lambda']) && $config['lambda'] <= 0) {
             return false;
         }
-        
+
         if (isset($config['min']) && $config['min'] < 0) {
             return false;
         }
-        
+
         if (isset($config['min']) && isset($config['max']) && $config['min'] >= $config['max']) {
             return false;
         }
-        
+
         return true;
     }
 }

@@ -2,8 +2,8 @@
 
 namespace LaravelMint\Tests\Helpers;
 
-use PHPUnit\Framework\Assert;
 use Illuminate\Support\Collection;
+use PHPUnit\Framework\Assert;
 
 trait AssertionHelpers
 {
@@ -20,7 +20,7 @@ trait AssertionHelpers
             );
         }
     }
-    
+
     /**
      * Assert that data distribution is within expected range
      */
@@ -29,20 +29,20 @@ trait AssertionHelpers
         $mean = array_sum($data) / count($data);
         $lowerBound = $expectedMean * (1 - $tolerance);
         $upperBound = $expectedMean * (1 + $tolerance);
-        
+
         Assert::assertGreaterThanOrEqual(
             $lowerBound,
             $mean,
             "Mean {$mean} is below expected range [{$lowerBound}, {$upperBound}]"
         );
-        
+
         Assert::assertLessThanOrEqual(
             $upperBound,
             $mean,
             "Mean {$mean} is above expected range [{$lowerBound}, {$upperBound}]"
         );
     }
-    
+
     /**
      * Assert that a collection has specific structure
      */
@@ -58,7 +58,7 @@ trait AssertionHelpers
             }
         });
     }
-    
+
     /**
      * Assert that data is unique within tolerance
      */
@@ -67,14 +67,14 @@ trait AssertionHelpers
         $uniqueCount = count(array_unique($data));
         $totalCount = count($data);
         $uniquenessRatio = $uniqueCount / $totalCount;
-        
+
         Assert::assertGreaterThanOrEqual(
             $minUniquenessRatio,
             $uniquenessRatio,
             "Data uniqueness ratio {$uniquenessRatio} is below minimum {$minUniquenessRatio}"
         );
     }
-    
+
     /**
      * Assert that relationships are properly loaded
      */
@@ -87,7 +87,7 @@ trait AssertionHelpers
             );
         }
     }
-    
+
     /**
      * Assert that generated data respects constraints
      */
@@ -96,7 +96,7 @@ trait AssertionHelpers
         foreach ($data as $item) {
             foreach ($constraints as $field => $constraint) {
                 $value = data_get($item, $field);
-                
+
                 if (isset($constraint['min'])) {
                     Assert::assertGreaterThanOrEqual(
                         $constraint['min'],
@@ -104,7 +104,7 @@ trait AssertionHelpers
                         "Field '{$field}' value {$value} is below minimum {$constraint['min']}"
                     );
                 }
-                
+
                 if (isset($constraint['max'])) {
                     Assert::assertLessThanOrEqual(
                         $constraint['max'],
@@ -112,7 +112,7 @@ trait AssertionHelpers
                         "Field '{$field}' value {$value} is above maximum {$constraint['max']}"
                     );
                 }
-                
+
                 if (isset($constraint['in'])) {
                     Assert::assertContains(
                         $value,
@@ -120,7 +120,7 @@ trait AssertionHelpers
                         "Field '{$field}' value {$value} is not in allowed values"
                     );
                 }
-                
+
                 if (isset($constraint['pattern'])) {
                     Assert::assertMatchesRegularExpression(
                         $constraint['pattern'],
@@ -131,7 +131,7 @@ trait AssertionHelpers
             }
         }
     }
-    
+
     /**
      * Assert performance metrics
      */
@@ -139,25 +139,25 @@ trait AssertionHelpers
     {
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
-        
+
         $operation();
-        
+
         $elapsedTime = microtime(true) - $startTime;
         $memoryUsed = (memory_get_usage(true) - $startMemory) / 1024 / 1024;
-        
+
         Assert::assertLessThanOrEqual(
             $maxSeconds,
             $elapsedTime,
             "Operation took {$elapsedTime} seconds, exceeding limit of {$maxSeconds} seconds"
         );
-        
+
         Assert::assertLessThanOrEqual(
             $maxMemoryMb,
             $memoryUsed,
             "Operation used {$memoryUsed} MB, exceeding limit of {$maxMemoryMb} MB"
         );
     }
-    
+
     /**
      * Assert that cache was used
      */
@@ -165,20 +165,20 @@ trait AssertionHelpers
     {
         // Clear cache first
         cache()->forget($key);
-        
+
         // First call should miss cache
         $firstResult = $operation();
-        
+
         // Second call should hit cache
         $secondResult = $operation();
-        
+
         Assert::assertEquals(
             $firstResult,
             $secondResult,
-            "Cache results do not match"
+            'Cache results do not match'
         );
     }
-    
+
     /**
      * Assert array structure recursively
      */
@@ -187,7 +187,7 @@ trait AssertionHelpers
         foreach ($structure as $key => $value) {
             if (is_array($value) && $key === '*') {
                 Assert::assertIsArray($array);
-                
+
                 foreach ($array as $item) {
                     $this->assertArrayStructure($item, $value);
                 }
@@ -199,7 +199,7 @@ trait AssertionHelpers
             }
         }
     }
-    
+
     /**
      * Assert that an exception is thrown with specific message
      */
@@ -212,7 +212,7 @@ trait AssertionHelpers
             Assert::assertStringContainsString(
                 $expectedMessage,
                 $e->getMessage(),
-                "Exception message does not contain expected text"
+                'Exception message does not contain expected text'
             );
         }
     }

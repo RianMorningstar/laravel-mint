@@ -11,7 +11,7 @@ return [
                 'max' => 80,
             ],
         ],
-        
+
         'product_price_distribution' => [
             'type' => 'exponential',
             'config' => [
@@ -20,7 +20,7 @@ return [
                 'max' => 5000,
             ],
         ],
-        
+
         'order_seasonal_pattern' => [
             'type' => 'seasonal',
             'config' => [
@@ -29,7 +29,7 @@ return [
                 'base_value' => 100,
             ],
         ],
-        
+
         'traffic_weekly_pattern' => [
             'type' => 'weekly',
             'config' => [
@@ -38,7 +38,7 @@ return [
                 'base_value' => 1000,
             ],
         ],
-        
+
         'revenue_composite_pattern' => [
             'type' => 'composite',
             'config' => [
@@ -57,7 +57,7 @@ return [
             ],
         ],
     ],
-    
+
     'test_scenarios' => [
         'small_ecommerce' => [
             'description' => 'Small e-commerce dataset for testing',
@@ -68,7 +68,7 @@ return [
                 ['model' => 'Order', 'count' => 30],
             ],
         ],
-        
+
         'blog_platform' => [
             'description' => 'Blog platform with posts and comments',
             'steps' => [
@@ -78,7 +78,7 @@ return [
                 ['model' => 'Tag', 'count' => 15],
             ],
         ],
-        
+
         'saas_application' => [
             'description' => 'SaaS application with subscriptions',
             'steps' => [
@@ -90,7 +90,7 @@ return [
             ],
         ],
     ],
-    
+
     'validation_rules' => [
         'email' => ['required', 'email', 'unique:users'],
         'password' => ['required', 'min:8'],
@@ -100,7 +100,7 @@ return [
         'status' => ['required', 'in:draft,published,archived'],
         'rating' => ['required', 'integer', 'between:1,5'],
     ],
-    
+
     'field_mappings' => [
         'email' => 'email',
         'password' => 'password',

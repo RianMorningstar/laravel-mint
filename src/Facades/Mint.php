@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void generateWithScenario(string $scenario, array $options = [])
  * @method static int clear(string $modelClass = null)
  * @method static mixed getConfig(string $key = null, $default = null)
- * 
+ *
  * @see \LaravelMint\Mint
  */
 class Mint extends Facade

@@ -29,23 +29,23 @@ class PatternListCommand extends Command
      */
     public function handle(): int
     {
-        $registry = new PatternRegistry();
+        $registry = new PatternRegistry;
         $category = $this->option('category');
-        
+
         if ($category) {
             $patterns = $registry->getByCategory($category);
             $this->info("Patterns in category: {$category}");
         } else {
             $patterns = $registry->all();
-            $this->info("All available patterns:");
+            $this->info('All available patterns:');
         }
-        
+
         if ($this->option('json')) {
             $this->outputJson($patterns, $registry);
         } else {
             $this->outputTable($patterns, $registry);
         }
-        
+
         return 0;
     }
 
@@ -55,12 +55,12 @@ class PatternListCommand extends Command
     protected function outputJson(array $patterns, PatternRegistry $registry): void
     {
         $output = [];
-        
+
         foreach ($patterns as $name => $class) {
             $info = $registry->info($name);
             $output[$name] = $info;
         }
-        
+
         $this->line(json_encode($output, JSON_PRETTY_PRINT));
     }
 
@@ -70,43 +70,43 @@ class PatternListCommand extends Command
     protected function outputTable(array $patterns, PatternRegistry $registry): void
     {
         $this->newLine();
-        
+
         // Group by category
         $categories = [];
         foreach ($patterns as $name => $class) {
             $parts = explode('.', $name);
             $category = count($parts) > 1 ? $parts[0] : 'general';
-            
-            if (!isset($categories[$category])) {
+
+            if (! isset($categories[$category])) {
                 $categories[$category] = [];
             }
-            
+
             $categories[$category][$name] = $class;
         }
-        
+
         foreach ($categories as $category => $categoryPatterns) {
-            $this->comment(ucfirst($category) . ' Patterns:');
-            
+            $this->comment(ucfirst($category).' Patterns:');
+
             $table = new Table($this->output);
             $table->setHeaders(['Name', 'Description', 'Aliases']);
-            
+
             $rows = [];
             foreach ($categoryPatterns as $name => $class) {
                 $info = $registry->info($name);
                 $aliases = implode(', ', $info['aliases']);
-                
+
                 $rows[] = [
                     $name,
                     $info['description'],
                     $aliases ?: '-',
                 ];
             }
-            
+
             $table->setRows($rows);
             $table->render();
             $this->newLine();
         }
-        
+
         // Show usage example
         $this->info('Usage Examples:');
         $this->line('  Generate with normal distribution:');

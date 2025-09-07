@@ -7,19 +7,23 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use LaravelMint\Mint;
 use LaravelMint\Integration\WebhookManager;
+use LaravelMint\Mint;
 
 class GenerateDataJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    
+
     protected string $modelClass;
+
     protected int $count;
+
     protected array $options;
+
     protected ?string $webhookUrl;
+
     protected string $jobId;
-    
+
     /**
      * Create a new job instance.
      */
@@ -31,7 +35,7 @@ class GenerateDataJob implements ShouldQueue
         $this->webhookUrl = $webhookUrl;
         $this->jobId = uniqid('mint_job_');
     }
-    
+
     /**
      * Execute the job.
      */
@@ -39,21 +43,21 @@ class GenerateDataJob implements ShouldQueue
     {
         // Update job status
         $this->updateStatus('processing');
-        
+
         try {
             $startTime = microtime(true);
-            
+
             // Generate data
             $result = $mint->generate($this->modelClass, $this->count, $this->options);
-            
+
             $executionTime = microtime(true) - $startTime;
-            
+
             // Update job status
             $this->updateStatus('completed', [
                 'result' => $result,
                 'execution_time' => $executionTime,
             ]);
-            
+
             // Send webhook if configured
             if ($this->webhookUrl) {
                 $webhookManager->sendImmediate($this->webhookUrl, 'POST', [
@@ -61,23 +65,23 @@ class GenerateDataJob implements ShouldQueue
                     'job_id' => $this->jobId,
                     'model' => $this->modelClass,
                     'count' => $this->count,
-                    'execution_time' => round($executionTime, 2) . 's',
+                    'execution_time' => round($executionTime, 2).'s',
                     'timestamp' => now()->toIso8601String(),
                 ]);
             }
-            
+
             // Trigger general webhook
             $webhookManager->trigger('generation_complete', [
                 'job_id' => $this->jobId,
                 'model' => $this->modelClass,
                 'count' => $this->count,
-                'execution_time' => round($executionTime, 2) . 's',
+                'execution_time' => round($executionTime, 2).'s',
             ]);
         } catch (\Exception $e) {
             $this->updateStatus('failed', [
                 'error' => $e->getMessage(),
             ]);
-            
+
             // Send failure webhook
             if ($this->webhookUrl) {
                 $webhookManager->sendImmediate($this->webhookUrl, 'POST', [
@@ -89,11 +93,11 @@ class GenerateDataJob implements ShouldQueue
                     'timestamp' => now()->toIso8601String(),
                 ]);
             }
-            
+
             throw $e;
         }
     }
-    
+
     /**
      * Update job status in cache
      */
@@ -106,12 +110,12 @@ class GenerateDataJob implements ShouldQueue
             'updated_at' => now(),
         ], $data), 3600);
     }
-    
+
     /**
      * Get job tags
      */
     public function tags(): array
     {
-        return ['mint', 'model:' . class_basename($this->modelClass)];
+        return ['mint', 'model:'.class_basename($this->modelClass)];
     }
 }

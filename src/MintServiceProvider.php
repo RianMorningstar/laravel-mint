@@ -4,21 +4,21 @@ namespace LaravelMint;
 
 use Illuminate\Support\ServiceProvider;
 use LaravelMint\Commands\AnalyzeCommand;
-use LaravelMint\Commands\GenerateCommand;
 use LaravelMint\Commands\ClearCommand;
+use LaravelMint\Commands\GenerateCommand;
 use LaravelMint\Commands\ImportCommand;
 use LaravelMint\Commands\PatternListCommand;
 use LaravelMint\Commands\PatternShowCommand;
-use LaravelMint\Console\Commands\ScenarioRunCommand;
-use LaravelMint\Console\Commands\ScenarioListCommand;
-use LaravelMint\Console\Commands\ImportCommand as ConsoleImportCommand;
 use LaravelMint\Console\Commands\ExportCommand;
+use LaravelMint\Console\Commands\ImportCommand as ConsoleImportCommand;
+use LaravelMint\Console\Commands\ScenarioListCommand;
+use LaravelMint\Console\Commands\ScenarioRunCommand;
 use LaravelMint\Console\Commands\SeedCommand;
-use LaravelMint\Scenarios\ScenarioRunner;
-use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\FactoryIntegration;
+use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\WebhookManager;
 use LaravelMint\Patterns\PatternRegistry;
+use LaravelMint\Scenarios\ScenarioRunner;
 
 class MintServiceProvider extends ServiceProvider
 {
@@ -33,7 +33,7 @@ class MintServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(PatternRegistry::class, function ($app) {
-            return new PatternRegistry();
+            return new PatternRegistry;
         });
 
         $this->app->singleton(ScenarioRunner::class, function ($app) {
@@ -49,8 +49,9 @@ class MintServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(WebhookManager::class, function ($app) {
-            $manager = new WebhookManager();
+            $manager = new WebhookManager;
             $manager->configure(config('mint.webhooks', []));
+
             return $manager;
         });
     }
@@ -59,7 +60,7 @@ class MintServiceProvider extends ServiceProvider
     {
         // Load routes
         $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
-        
+
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/Config/mint.php' => config_path('mint.php'),

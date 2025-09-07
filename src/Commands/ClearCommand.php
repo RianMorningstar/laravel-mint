@@ -32,58 +32,62 @@ class ClearCommand extends Command
         $modelClass = $this->argument('model');
         $clearAll = $this->option('all');
         $force = $this->option('force');
-        
-        if (!$modelClass && !$clearAll) {
+
+        if (! $modelClass && ! $clearAll) {
             $this->error('Please provide a model class or use --all option');
+
             return 1;
         }
-        
+
         // Confirm action
-        if (!$force) {
-            $message = $clearAll 
+        if (! $force) {
+            $message = $clearAll
                 ? 'This will clear ALL generated data. Are you sure?'
-                : "This will clear all data from the specified model. Are you sure?";
-                
-            if (!$this->confirm($message)) {
+                : 'This will clear all data from the specified model. Are you sure?';
+
+            if (! $this->confirm($message)) {
                 $this->info('Operation cancelled');
+
                 return 0;
             }
         }
-        
+
         try {
             if ($clearAll) {
                 // TODO: Implement clearing all generated data
                 // This would require tracking which data was generated
                 $this->warn('Clear all functionality not yet implemented');
                 $this->info('Please clear individual models for now');
+
                 return 1;
             }
-            
+
             // Prepend App\Models if not fully qualified
-            if (!str_contains($modelClass, '\\')) {
-                $modelClass = 'App\\Models\\' . $modelClass;
+            if (! str_contains($modelClass, '\\')) {
+                $modelClass = 'App\\Models\\'.$modelClass;
             }
-            
+
             // Check if model exists
-            if (!class_exists($modelClass)) {
+            if (! class_exists($modelClass)) {
                 $this->error("Model class {$modelClass} does not exist");
+
                 return 1;
             }
-            
+
             $this->info("Clearing data for: {$modelClass}");
-            
+
             $deleted = Mint::clear($modelClass);
-            
+
             $this->info("✓ Successfully deleted {$deleted} records");
-            
+
             return 0;
         } catch (\Exception $e) {
-            $this->error("Error clearing data: " . $e->getMessage());
-            
+            $this->error('Error clearing data: '.$e->getMessage());
+
             if ($this->option('verbose')) {
                 $this->error($e->getTraceAsString());
             }
-            
+
             return 1;
         }
     }

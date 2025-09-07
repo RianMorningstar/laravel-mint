@@ -5,8 +5,11 @@ namespace LaravelMint\Patterns;
 class CompositePattern extends AbstractPattern
 {
     protected array $patterns = [];
+
     protected array $weights = [];
+
     protected string $mode = 'combine'; // combine, select, sequence
+
     protected string $combination = 'additive'; // additive, multiplicative
 
     public function __construct($config = [], array $patterns = [])
@@ -31,11 +34,11 @@ class CompositePattern extends AbstractPattern
     {
         $this->name = 'Composite Pattern';
         $this->description = 'Combines multiple patterns';
-        
+
         $this->mode = $this->getConfig('mode', 'combine');
         $this->combination = $this->getConfig('combination', $this->combination);
         $this->weights = $this->getConfig('weights', $this->weights);
-        
+
         $this->parameters = [
             'mode' => [
                 'type' => 'string',
@@ -66,10 +69,10 @@ class CompositePattern extends AbstractPattern
         switch ($this->mode) {
             case 'select':
                 return $this->generateSelect($context);
-                
+
             case 'sequence':
                 return $this->generateSequence($context);
-                
+
             case 'combine':
             default:
                 return $this->generateCombine($context);
@@ -82,7 +85,7 @@ class CompositePattern extends AbstractPattern
     public function generateForDate(\DateTimeInterface $date): mixed
     {
         $context = ['timestamp' => $date];
-        
+
         if ($this->combination === 'multiplicative') {
             $result = 1.0;
             foreach ($this->patterns as $i => $pattern) {
@@ -94,6 +97,7 @@ class CompositePattern extends AbstractPattern
                 }
                 $result *= pow($value, $weight);
             }
+
             return $result;
         } else {
             // Additive combination
@@ -107,6 +111,7 @@ class CompositePattern extends AbstractPattern
                 }
                 $result += $value * $weight;
             }
+
             return $result;
         }
     }
@@ -123,6 +128,7 @@ class CompositePattern extends AbstractPattern
                 $value = $pattern->generate($context);
                 $result *= pow($value, $weight);
             }
+
             return $result;
         } else {
             // Additive combination
@@ -132,6 +138,7 @@ class CompositePattern extends AbstractPattern
                 $value = $pattern->generate($context);
                 $result += $value * $weight;
             }
+
             return $result;
         }
     }
@@ -142,7 +149,7 @@ class CompositePattern extends AbstractPattern
     protected function generateSelect(array $context): mixed
     {
         $weights = $this->getConfig('weights', []);
-        
+
         if (empty($weights)) {
             // Equal weights
             $selected = $this->faker->randomElement($this->patterns);
@@ -150,7 +157,7 @@ class CompositePattern extends AbstractPattern
             // Weighted selection
             $selected = $this->weightedSelect($this->patterns, $weights);
         }
-        
+
         return $selected->generate($context);
     }
 
@@ -160,11 +167,11 @@ class CompositePattern extends AbstractPattern
     protected function generateSequence(array $context): array
     {
         static $index = 0;
-        
+
         $patternArray = array_values($this->patterns);
         $pattern = $patternArray[$index % count($patternArray)];
         $index++;
-        
+
         return $pattern->generate($context);
     }
 
@@ -175,17 +182,17 @@ class CompositePattern extends AbstractPattern
     {
         $totalWeight = array_sum($weights);
         $random = $this->faker->randomFloat(6, 0, $totalWeight);
-        
+
         $cumulative = 0;
         foreach ($patterns as $name => $pattern) {
             $weight = $weights[$name] ?? 1;
             $cumulative += $weight;
-            
+
             if ($random <= $cumulative) {
                 return $pattern;
             }
         }
-        
+
         // Fallback to last pattern
         return end($patterns);
     }

@@ -2,15 +2,16 @@
 
 namespace LaravelMint\Analyzers;
 
-use LaravelMint\Mint;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use LaravelMint\Mint;
 use ReflectionClass;
 use ReflectionMethod;
 
 class ModelAnalyzer
 {
     protected Mint $mint;
+
     protected array $cache = [];
 
     public function __construct(Mint $mint)
@@ -20,11 +21,11 @@ class ModelAnalyzer
 
     public function analyze(string $modelClass): array
     {
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
         }
 
-        if (!is_subclass_of($modelClass, Model::class)) {
+        if (! is_subclass_of($modelClass, Model::class)) {
             throw new \InvalidArgumentException("{$modelClass} is not an Eloquent model");
         }
 
@@ -90,8 +91,10 @@ class ModelAnalyzer
         if ($reflection->hasProperty('appends')) {
             $property = $reflection->getProperty('appends');
             $property->setAccessible(true);
+
             return $property->getValue($instance) ?? [];
         }
+
         return [];
     }
 
@@ -100,18 +103,18 @@ class ModelAnalyzer
         // In Laravel 9+, dates are part of casts
         $casts = $instance->getCasts();
         $dates = [];
-        
+
         foreach ($casts as $key => $type) {
             if (in_array($type, ['date', 'datetime', 'custom_datetime', 'immutable_date', 'immutable_datetime'])) {
                 $dates[] = $key;
             }
         }
-        
+
         if ($instance->usesTimestamps()) {
             $dates[] = $instance->getCreatedAtColumn();
             $dates[] = $instance->getUpdatedAtColumn();
         }
-        
+
         return array_unique($dates);
     }
 
@@ -122,7 +125,7 @@ class ModelAnalyzer
 
         foreach ($methods as $method) {
             // Skip non-relation methods
-            if ($method->class !== $reflection->getName() || 
+            if ($method->class !== $reflection->getName() ||
                 $method->getNumberOfParameters() > 0 ||
                 $method->isStatic() ||
                 $method->isAbstract() ||
@@ -132,9 +135,9 @@ class ModelAnalyzer
 
             try {
                 $returnType = $method->getReturnType();
-                
+
                 // Check if method returns a relationship
-                if ($returnType && !$returnType->isBuiltin()) {
+                if ($returnType && ! $returnType->isBuiltin()) {
                     $typeName = $returnType->getName();
                     if ($this->isRelationClass($typeName)) {
                         $relations[$method->getName()] = [
@@ -155,7 +158,7 @@ class ModelAnalyzer
 
     protected function analyzeScopes(ReflectionClass $reflection): array
     {
-        if (!$this->mint->getConfig('analysis.detect_scopes')) {
+        if (! $this->mint->getConfig('analysis.detect_scopes')) {
             return [];
         }
 
@@ -183,7 +186,7 @@ class ModelAnalyzer
 
         foreach ($methods as $method) {
             $name = $method->getName();
-            
+
             // Laravel 9+ attribute mutators
             if (preg_match('/^set([A-Z][a-zA-Z]*)Attribute$/', $name, $matches)) {
                 $attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $matches[1]));
@@ -201,7 +204,7 @@ class ModelAnalyzer
 
         foreach ($methods as $method) {
             $name = $method->getName();
-            
+
             // Laravel 9+ attribute accessors
             if (preg_match('/^get([A-Z][a-zA-Z]*)Attribute$/', $name, $matches)) {
                 $attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $matches[1]));
@@ -214,22 +217,24 @@ class ModelAnalyzer
 
     protected function extractValidationRules(string $modelClass): array
     {
-        if (!$this->mint->getConfig('analysis.detect_validations')) {
+        if (! $this->mint->getConfig('analysis.detect_validations')) {
             return [];
         }
 
         // Check if model has a rules method or property
         $reflection = new ReflectionClass($modelClass);
-        
+
         if ($reflection->hasProperty('rules')) {
             $property = $reflection->getProperty('rules');
             $property->setAccessible(true);
             $instance = new $modelClass;
+
             return $property->getValue($instance) ?? [];
         }
 
         if ($reflection->hasMethod('rules')) {
             $instance = new $modelClass;
+
             return $instance->rules();
         }
 
@@ -240,14 +245,14 @@ class ModelAnalyzer
     {
         $traits = [];
         $classTraits = $reflection->getTraitNames();
-        
+
         foreach ($classTraits as $trait) {
             $traits[] = [
                 'name' => $trait,
                 'short_name' => class_basename($trait),
             ];
         }
-        
+
         return $traits;
     }
 
