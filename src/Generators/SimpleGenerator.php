@@ -542,10 +542,12 @@ class SimpleGenerator extends DataGenerator
             'state',
             'type',
             'role',
+            'password',
             'order_number',
             'invoice_number',
             'reference',
             'code',
+            'sku',
             'slug',
             'uuid',
             'total',
@@ -600,6 +602,16 @@ class SimpleGenerator extends DataGenerator
         // Slug fields
         if (str_contains($columnLower, 'slug')) {
             return $this->faker->slug();
+        }
+        
+        // SKU fields
+        if ($columnLower === 'sku') {
+            return 'SKU-' . $this->faker->unique()->numberBetween(10000, 99999);
+        }
+        
+        // Password fields
+        if ($columnLower === 'password' || str_contains($columnLower, 'password')) {
+            return bcrypt('password');
         }
 
         // State fields

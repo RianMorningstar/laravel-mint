@@ -10,6 +10,7 @@ class ScenarioCommand extends Command
     protected $signature = 'mint:scenario 
                             {scenario : The scenario to run}
                             {--list : List available scenarios}
+                            {--scale=1 : Scale factor for scenario}
                             {--options=* : Scenario options in key=value format}';
 
     protected $description = 'Run a predefined data generation scenario';
@@ -31,6 +32,12 @@ class ScenarioCommand extends Command
                 [$key, $value] = explode('=', $option, 2);
                 $options[$key] = $value;
             }
+        }
+        
+        // Add scale option
+        $scale = (float) $this->option('scale');
+        if ($scale != 1) {
+            $options['scale'] = $scale;
         }
         
         try {

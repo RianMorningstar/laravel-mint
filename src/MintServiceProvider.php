@@ -10,6 +10,7 @@ use LaravelMint\Console\Commands\ImportCommand;
 use LaravelMint\Console\Commands\ExportCommand;
 use LaravelMint\Console\Commands\ScenarioCommand;
 use LaravelMint\Console\Commands\PatternCommand;
+use LaravelMint\Console\Commands\PatternListCommand;
 use LaravelMint\Integration\FactoryIntegration;
 use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\WebhookManager;
@@ -78,6 +79,7 @@ class MintServiceProvider extends ServiceProvider
                 ExportCommand::class,
                 ScenarioCommand::class,
                 PatternCommand::class,
+                PatternListCommand::class,
             ]);
         }
     }

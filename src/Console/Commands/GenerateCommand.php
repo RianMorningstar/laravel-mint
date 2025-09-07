@@ -17,6 +17,10 @@ class GenerateCommand extends Command
                             {count=10 : Number of records to generate}
                             {--attributes=* : Custom attributes in key=value format}
                             {--pattern= : Pattern to apply}
+                            {--pattern-config=* : Pattern configuration in key=value format}
+                            {--with-relationships : Generate related models}
+                            {--chunk=1000 : Chunk size for batch operations}
+                            {--scale=1 : Scale factor for scenario}
                             {--seed= : Random seed for consistent generation}
                             {--silent : Suppress output}
                             {--performance : Performance mode for large datasets}';
@@ -60,8 +64,25 @@ class GenerateCommand extends Command
             }
         }
         
+        // Parse pattern config
+        $patternConfig = [];
+        $patternConfigStrings = $this->option('pattern-config');
+        if (is_string($patternConfigStrings)) {
+            $patternConfigStrings = [$patternConfigStrings];
+        }
+        foreach ($patternConfigStrings as $configString) {
+            if (strpos($configString, '=') !== false) {
+                [$key, $value] = explode('=', $configString, 2);
+                $patternConfig[trim($key)] = $this->parseValue(trim($value));
+            }
+        }
+        
         $options = array_merge($attributes, [
             'pattern' => $this->option('pattern'),
+            'pattern_config' => !empty($patternConfig) ? $patternConfig : null,
+            'with_relationships' => $this->option('with-relationships'),
+            'chunk' => (int) $this->option('chunk'),
+            'scale' => (float) $this->option('scale'),
             'seed' => $this->option('seed'),
             'silent' => $this->option('silent'),
             'performance' => $this->option('performance'),

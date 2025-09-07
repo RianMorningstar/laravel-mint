@@ -106,7 +106,7 @@ class MintTest extends TestCase
             'stddev' => 20,
         ]);
 
-        $attendeeCounts = array_map(fn ($r) => $r->attendees, $records);
+        $attendeeCounts = $records->map(fn ($r) => $r->attendees)->toArray();
         $this->assertDataDistribution($attendeeCounts, 100, 0.3);
     }
 
@@ -210,6 +210,7 @@ class MintTest extends TestCase
         $userClass = TestModelFactory::create('User', [
             'name' => 'string',
             'email' => 'string',
+            'password' => 'string',
         ]);
 
         $postClass = TestModelFactory::create('Post', [

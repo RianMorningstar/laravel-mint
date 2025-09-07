@@ -32,13 +32,21 @@ class PatternAwareGenerator extends SimpleGenerator
         if (isset($this->options['pattern'])) {
             $patternName = $this->options['pattern'];
             $field = $this->options['field'] ?? null;
+            
+            // Extract pattern configuration (mean, stddev, etc.)
+            $patternConfig = [];
+            foreach ($this->options as $key => $value) {
+                if (in_array($key, ['mean', 'stddev', 'min', 'max', 'lambda', 'scale'])) {
+                    $patternConfig[$key] = $value;
+                }
+            }
 
             if ($field) {
                 // Apply pattern to specific field
-                $this->columnPatterns[$field] = $this->patternRegistry->get($patternName);
+                $this->columnPatterns[$field] = $this->patternRegistry->create($patternName, $patternConfig);
             } else {
                 // Use as global pattern
-                $this->globalPatterns['default'] = $this->patternRegistry->get($patternName);
+                $this->globalPatterns['default'] = $this->patternRegistry->create($patternName, $patternConfig);
             }
         }
 
