@@ -2,6 +2,7 @@
 
 namespace LaravelMint\Tests\Unit;
 
+use Illuminate\Support\Facades\Schema;
 use LaravelMint\Mint;
 use LaravelMint\Scenarios\ScenarioManager;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
@@ -202,6 +203,11 @@ class MintTest extends TestCase
 
     public function test_batch_generation_creates_multiple_models()
     {
+        // Clean up any existing posts table first
+        if (Schema::hasTable('posts')) {
+            Schema::drop('posts');
+        }
+        
         $userClass = TestModelFactory::create('User', [
             'name' => 'string',
             'email' => 'string',
@@ -210,6 +216,7 @@ class MintTest extends TestCase
 
         $postClass = TestModelFactory::create('Post', [
             'title' => 'string',
+            'content' => 'text',
             'user_id' => 'integer',
         ], [
             'user' => ['type' => 'belongsTo', 'model' => $userClass],
