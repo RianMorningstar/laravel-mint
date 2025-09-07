@@ -18,8 +18,8 @@ class TestModelFactory
         $className = "Test{$modelName}Model";
         $tableName = strtolower($modelName).'s';
 
-        // Use the test connection explicitly
-        $connection = app('db')->connection(config('database.default'));
+        // Use the default connection from the database manager
+        $connection = app('db')->connection();
         $schema = $connection->getSchemaBuilder();
         
         // Create the table
@@ -100,7 +100,7 @@ class TestModelFactory
      */
     public static function cleanup(): void
     {
-        $connection = app('db')->connection(config('database.default'));
+        $connection = app('db')->connection();
         $schema = $connection->getSchemaBuilder();
         
         foreach (self::$createdModels as $className) {
