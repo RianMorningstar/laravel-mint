@@ -91,6 +91,7 @@ abstract class DataGenerator
             'silent', 'chunk', 'pattern', 'patterns', 'with-relationships',
             'field', 'column_patterns', 'model_patterns', 'use_patterns',
             'with_relationships', 'mode', 'combination', 'weights',
+            'performance', 'seed',
         ];
 
         foreach ($this->options as $key => $value) {
