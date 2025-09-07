@@ -124,6 +124,11 @@ class Mint
     public function getConnection()
     {
         $connectionName = $this->getConfig('database.connection');
+        
+        // If no connection specified in config, use the default
+        if (!$connectionName) {
+            return $this->app['db']->connection();
+        }
 
         return $this->app['db']->connection($connectionName);
     }

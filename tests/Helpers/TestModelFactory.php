@@ -18,9 +18,13 @@ class TestModelFactory
         $className = "Test{$modelName}Model";
         $tableName = strtolower($modelName).'s';
 
+        // Use the test connection explicitly
+        $connection = app('db')->connection(config('database.default'));
+        $schema = $connection->getSchemaBuilder();
+        
         // Create the table
-        if (! Schema::hasTable($tableName)) {
-            Schema::create($tableName, function (Blueprint $table) use ($attributes, $relationships) {
+        if (! $schema->hasTable($tableName)) {
+            $schema->create($tableName, function (Blueprint $table) use ($attributes, $relationships) {
                 $table->id();
 
                 foreach ($attributes as $name => $type) {
@@ -96,9 +100,14 @@ class TestModelFactory
      */
     public static function cleanup(): void
     {
+        $connection = app('db')->connection(config('database.default'));
+        $schema = $connection->getSchemaBuilder();
+        
         foreach (self::$createdModels as $className) {
-            $instance = new $className;
-            Schema::dropIfExists($instance->getTable());
+            if (class_exists($className)) {
+                $instance = new $className;
+                $schema->dropIfExists($instance->getTable());
+            }
         }
 
         self::$createdModels = [];
