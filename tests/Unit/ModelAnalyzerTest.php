@@ -11,6 +11,7 @@ use LaravelMint\Tests\Helpers\AssertionHelpers;
 use LaravelMint\Tests\Helpers\DatabaseSeeder;
 use LaravelMint\Tests\Helpers\TestModelFactory;
 use LaravelMint\Tests\TestCase;
+use LaravelMint\Mint;
 use Mockery;
 
 class ModelAnalyzerTest extends TestCase
@@ -23,16 +24,16 @@ class ModelAnalyzerTest extends TestCase
 
     protected RelationshipMapper $relationshipMapper;
 
+    protected Mint $mint;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->schemaInspector = new SchemaInspector;
-        $this->relationshipMapper = new RelationshipMapper;
-        $this->analyzer = new ModelAnalyzer(
-            $this->schemaInspector,
-            $this->relationshipMapper
-        );
+        $this->mint = $this->app->make(Mint::class);
+        $this->schemaInspector = new SchemaInspector($this->mint);
+        $this->relationshipMapper = new RelationshipMapper($this->mint);
+        $this->analyzer = new ModelAnalyzer($this->mint);
 
         DatabaseSeeder::setupTestDatabase();
     }

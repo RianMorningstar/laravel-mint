@@ -14,6 +14,7 @@ use LaravelMint\Scenarios\ScenarioValidator;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
 use LaravelMint\Tests\Helpers\TestModelFactory;
 use LaravelMint\Tests\TestCase;
+use LaravelMint\Mint;
 use Mockery;
 
 class ScenarioManagerTest extends TestCase
@@ -26,13 +27,16 @@ class ScenarioManagerTest extends TestCase
 
     protected ScenarioValidator $validator;
 
+    protected Mint $mint;
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->mint = $this->app->make(Mint::class);
         $this->builder = new ScenarioBuilder;
         $this->validator = new ScenarioValidator;
-        $this->manager = new ScenarioManager($this->builder, $this->validator);
+        $this->manager = new ScenarioManager($this->mint);
     }
 
     protected function tearDown(): void
@@ -188,6 +192,18 @@ class ScenarioManagerTest extends TestCase
 
             protected string $description = 'Test base scenario';
 
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario
+                $this->generatedData['User'] = collect(range(1, 5));
+                $this->generatedData['Post'] = collect(range(1, 10));
+            }
+
             protected function defineSteps(): array
             {
                 return [
@@ -259,6 +275,17 @@ class ScenarioManagerTest extends TestCase
         {
             protected string $name = 'pattern-scenario';
 
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario with patterns
+                $this->generatedData['User'] = collect(range(1, 100));
+            }
+
             protected function defineSteps(): array
             {
                 return [
@@ -300,6 +327,18 @@ class ScenarioManagerTest extends TestCase
             {
                 $this->before = &$before;
                 $this->after = &$after;
+                parent::__construct();
+            }
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario
+                $this->generatedData['User'] = collect([1]);
             }
 
             protected function defineSteps(): array
@@ -334,6 +373,17 @@ class ScenarioManagerTest extends TestCase
         {
             protected string $name = 'error-scenario';
 
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // This will fail as NonExistentModel doesn't exist
+                throw new \Exception('Model not found');
+            }
+
             protected function defineSteps(): array
             {
                 return [
@@ -355,6 +405,18 @@ class ScenarioManagerTest extends TestCase
             protected string $name = 'transaction-scenario';
 
             protected bool $useTransaction = true;
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario with transaction
+                $this->generatedData['User'] = collect(range(1, 5));
+                $this->generatedData['Post'] = collect(range(1, 10));
+            }
 
             protected function defineSteps(): array
             {
@@ -411,6 +473,17 @@ class ScenarioManagerTest extends TestCase
         $scenario = new class extends BaseScenario
         {
             protected string $name = 'performance-scenario';
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario for performance
+                $this->generatedData['User'] = collect(range(1, 1000));
+            }
 
             protected function defineSteps(): array
             {

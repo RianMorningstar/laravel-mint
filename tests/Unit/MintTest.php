@@ -200,6 +200,9 @@ class MintTest extends TestCase
 
         // Just verify no exception was thrown
         $this->assertTrue(true);
+        
+        // Clean up mocks to avoid risky test warning
+        Mockery::close();
     }
 
     public function test_batch_generation_creates_multiple_models()
