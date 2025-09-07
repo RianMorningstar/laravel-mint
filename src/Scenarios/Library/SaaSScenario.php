@@ -7,9 +7,9 @@ use LaravelMint\Scenarios\BaseScenario;
 class SaaSScenario extends BaseScenario
 {
     protected string $name = 'saas';
-    
+
     protected string $description = 'SaaS Application scenario with users, subscriptions, plans, and billing';
-    
+
     protected function defineSteps(): array
     {
         return [
@@ -47,28 +47,28 @@ class SaaSScenario extends BaseScenario
             ],
         ];
     }
-    
+
     protected function initialize(): void
     {
         // Initialize SaaS specific settings
         $this->options['include_trials'] = $this->options['include_trials'] ?? true;
         $this->options['include_teams'] = $this->options['include_teams'] ?? true;
     }
-    
+
     protected function execute(): void
     {
         foreach ($this->defineSteps() as $step) {
             $model = $step['model'];
             $count = $step['count'] * ($this->options['scale'] ?? 1);
             $attributes = $step['attributes'] ?? [];
-            
+
             // Generate the data
             $generated = $this->mint->generate(
-                'App\\Models\\' . $model,
+                'App\\Models\\'.$model,
                 $count,
                 $attributes
             );
-            
+
             $this->generatedData[$model] = $generated;
         }
     }

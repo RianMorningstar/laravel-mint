@@ -30,45 +30,46 @@ class AnalyzeCommand extends Command
     public function handle(): int
     {
         $model = $this->argument('model');
-        
+
         try {
             $mint = app(Mint::class);
             $analysis = $mint->analyze($model);
-            
+
             if ($this->option('json')) {
                 $this->line(json_encode($analysis, JSON_PRETTY_PRINT));
             } else {
                 $this->displayAnalysis($analysis);
             }
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Failed to analyze model: " . $e->getMessage());
+            $this->error('Failed to analyze model: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
-    
+
     /**
      * Display analysis in table format
      */
     protected function displayAnalysis(array $analysis): void
     {
         // Extract model name from the analysis
-        $modelName = is_array($analysis['model']) 
+        $modelName = is_array($analysis['model'])
             ? ($analysis['model']['class'] ?? $analysis['model']['name'] ?? 'Unknown')
             : ($analysis['model'] ?? 'Unknown');
-            
-        $this->info("Model Analysis: " . $modelName);
+
+        $this->info('Model Analysis: '.$modelName);
         $this->newLine();
-        
+
         // Display attributes/fields
         // First check if model analysis has attributes
         $modelAttributes = is_array($analysis['model']) ? ($analysis['model']['attributes'] ?? []) : [];
         // Then check schema columns and top-level attributes
-        $fields = !empty($modelAttributes) ? $modelAttributes : 
+        $fields = ! empty($modelAttributes) ? $modelAttributes :
                   ($analysis['attributes'] ?? $analysis['schema']['columns'] ?? []);
-        
-        if (!empty($fields)) {
+
+        if (! empty($fields)) {
             $this->info('Attributes:');
             $rows = [];
             foreach ($fields as $name => $details) {
@@ -89,9 +90,9 @@ class AnalyzeCommand extends Command
             // If no attributes found, show a message
             $this->info('Attributes: No attributes information available');
         }
-        
+
         // Display relationships
-        if (!empty($analysis['relationships'])) {
+        if (! empty($analysis['relationships'])) {
             $this->newLine();
             $this->info('Relationships:');
             $rows = [];
@@ -108,29 +109,29 @@ class AnalyzeCommand extends Command
             }
             $this->table(['Relationship', 'Type', 'Model'], $rows);
         }
-        
+
         // Display record count - check the model class for actual count
         try {
-            $modelClass = is_array($analysis['model']) 
+            $modelClass = is_array($analysis['model'])
                 ? ($analysis['model']['class'] ?? null)
                 : null;
-            
-            if (!$modelClass) {
+
+            if (! $modelClass) {
                 // Try to get from the argument
                 $modelClass = $this->argument('model');
             }
-            
+
             if ($modelClass && class_exists($modelClass)) {
                 $count = $modelClass::count();
                 $this->newLine();
-                $this->line("Record Count: " . $count);
+                $this->line('Record Count: '.$count);
             }
         } catch (\Exception $e) {
             // Silently fail if we can't get the count
         }
-        
+
         // Display statistics if detailed
-        if ($this->option('detailed') && !empty($analysis['statistics'])) {
+        if ($this->option('detailed') && ! empty($analysis['statistics'])) {
             $this->newLine();
             $this->info('Statistics:');
             foreach ($analysis['statistics'] as $key => $value) {

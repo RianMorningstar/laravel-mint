@@ -29,12 +29,12 @@ class PatternRegistry
      */
     public function initializeBuiltInPatterns(): void
     {
-        if (!empty($this->builtInPatterns)) {
+        if (! empty($this->builtInPatterns)) {
             return; // Already initialized
         }
         $this->registerBuiltInPatterns();
     }
-    
+
     /**
      * Register built-in patterns
      */
@@ -127,13 +127,14 @@ class PatternRegistry
                 $factoryProp = $reflection->getProperty('factory');
                 $factoryProp->setAccessible(true);
                 $factory = $factoryProp->getValue($pattern);
-                
+
                 $configProp = $reflection->getProperty('defaultConfig');
                 $configProp->setAccessible(true);
                 $defaultConfig = $configProp->getValue($pattern);
-                
+
                 return $factory(array_merge($defaultConfig, $config));
             }
+
             return $pattern;
         }
 
@@ -147,11 +148,11 @@ class PatternRegistry
     public function get(string $name): PatternInterface
     {
         $patternName = $this->resolvePattern($name);
-        
-        if (!$patternName) {
+
+        if (! $patternName) {
             throw new \InvalidArgumentException("Pattern not found: {$name}");
         }
-        
+
         return $this->create($name);
     }
 
@@ -295,12 +296,12 @@ class PatternRegistry
     public function remove(string $name): void
     {
         $patternName = $this->resolvePattern($name);
-        
+
         if ($patternName) {
             unset($this->patterns[$patternName]);
-            
+
             // Remove any aliases pointing to this pattern
-            $this->aliases = array_filter($this->aliases, function($target) use ($patternName) {
+            $this->aliases = array_filter($this->aliases, function ($target) use ($patternName) {
                 return $target !== $patternName;
             });
         }
@@ -326,53 +327,57 @@ class PatternRegistry
      */
     public function registerFactory(string $name, callable $factory, array $defaultConfig = []): void
     {
-        $this->patterns[$name] = new class($factory, $defaultConfig) implements PatternInterface {
+        $this->patterns[$name] = new class($factory, $defaultConfig) implements PatternInterface
+        {
             private $factory;
+
             private $defaultConfig;
-            
+
             public function __construct(callable $factory, array $defaultConfig = [])
             {
                 $this->factory = $factory;
                 $this->defaultConfig = $defaultConfig;
             }
-            
+
             public function apply(array $data, array $config = []): array
             {
                 $pattern = ($this->factory)($config);
+
                 return $pattern->apply($data, $config);
             }
-            
+
             public function generate(array $context = []): mixed
             {
                 $pattern = ($this->factory)($this->defaultConfig);
+
                 return $pattern->generate($context);
             }
-            
+
             public function validate(array $config): bool
             {
                 return true;
             }
-            
+
             public function setConfig(array $config): void
             {
                 // Config is passed to factory when creating pattern
             }
-            
+
             public function reset(): void
             {
                 // No state to reset
             }
-            
+
             public function getName(): string
             {
                 return 'factory-pattern';
             }
-            
+
             public function getDescription(): string
             {
                 return 'Pattern created by factory';
             }
-            
+
             public function getParameters(): array
             {
                 return [];

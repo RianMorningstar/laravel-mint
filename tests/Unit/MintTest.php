@@ -196,7 +196,7 @@ class MintTest extends TestCase
 
         // Just verify no exception was thrown
         $this->assertTrue(true);
-        
+
         // Clean up mocks to avoid risky test warning
         Mockery::close();
     }
@@ -207,7 +207,7 @@ class MintTest extends TestCase
         if (Schema::hasTable('posts')) {
             Schema::drop('posts');
         }
-        
+
         $userClass = TestModelFactory::create('User', [
             'name' => 'string',
             'email' => 'string',

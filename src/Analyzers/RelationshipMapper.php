@@ -29,7 +29,7 @@ class RelationshipMapper
         if ($depth === 0) {
             $this->visitedModels = [];
         }
-        
+
         if (! class_exists($modelClass)) {
             throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
         }

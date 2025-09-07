@@ -17,7 +17,7 @@ class ScenarioResult
     protected int $memoryUsage = 0;
 
     protected bool $success = true;
-    
+
     protected array $data = [];
 
     public function __construct($scenarioOrSuccess = '', ?array $data = null)
@@ -104,33 +104,33 @@ class ScenarioResult
     {
         // Start with provided data, then add computed values (but don't override)
         $result = $this->data;
-        
+
         // Only add computed values if they're not already in data
-        if (!isset($result['generated'])) {
+        if (! isset($result['generated'])) {
             $result['generated'] = $this->generated;
         }
-        if (!isset($result['statistics'])) {
+        if (! isset($result['statistics'])) {
             $result['statistics'] = $this->statistics;
         }
-        if (!isset($result['errors'])) {
+        if (! isset($result['errors'])) {
             $result['errors'] = $this->errors;
         }
-        if (!isset($result['error']) && !empty($this->errors)) {
+        if (! isset($result['error']) && ! empty($this->errors)) {
             $result['error'] = $this->errors[0];
         }
-        if (!isset($result['records'])) {
+        if (! isset($result['records'])) {
             $result['records'] = $this->data['records'] ?? $this->getTotalGenerated();
         }
-        if (!isset($result['duration'])) {
+        if (! isset($result['duration'])) {
             $result['duration'] = $this->data['duration'] ?? $this->executionTime;
         }
-        if (!isset($result['memory'])) {
+        if (! isset($result['memory'])) {
             $result['memory'] = $this->data['memory'] ?? $this->memoryUsage;
         }
-        if (!isset($result['records_created'])) {
+        if (! isset($result['records_created'])) {
             $result['records_created'] = $this->data['records_created'] ?? $this->getTotalGenerated();
         }
-        
+
         return $result;
     }
 

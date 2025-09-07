@@ -3,6 +3,7 @@
 namespace LaravelMint\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
+use LaravelMint\Mint;
 use LaravelMint\Scenarios\BaseScenario;
 use LaravelMint\Scenarios\Library\EcommerceScenario;
 use LaravelMint\Scenarios\Library\SaaSScenario;
@@ -14,7 +15,6 @@ use LaravelMint\Scenarios\ScenarioValidator;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
 use LaravelMint\Tests\Helpers\TestModelFactory;
 use LaravelMint\Tests\TestCase;
-use LaravelMint\Mint;
 use Mockery;
 
 class ScenarioManagerTest extends TestCase

@@ -23,7 +23,7 @@ class Mint
     protected RelationshipMapper $relationshipMapper;
 
     protected ?DataGenerator $generator = null;
-    
+
     protected ?ScenarioManager $scenarioManager = null;
 
     protected array $config;
@@ -104,13 +104,13 @@ class Mint
     {
         if ($modelClass) {
             $query = $modelClass::query();
-            
-            if (!empty($conditions)) {
+
+            if (! empty($conditions)) {
                 foreach ($conditions as $key => $value) {
                     $query->where($key, $value);
                 }
             }
-            
+
             return $query->delete();
         }
 
@@ -130,9 +130,9 @@ class Mint
     public function getConnection()
     {
         $connectionName = $this->getConfig('database.connection');
-        
+
         // If no connection specified in config, use the default
-        if (!$connectionName) {
+        if (! $connectionName) {
             return $this->app['db']->connection();
         }
 
@@ -178,6 +178,7 @@ class Mint
 
         $registry = new PatternRegistry;
         $registry->initializeBuiltInPatterns();
+
         return $registry;
     }
 
@@ -209,13 +210,13 @@ class Mint
     public function export(string $modelClass, string $path, string $format = 'json', array $conditions = []): void
     {
         $query = $modelClass::query();
-        
-        if (!empty($conditions)) {
+
+        if (! empty($conditions)) {
             foreach ($conditions as $key => $value) {
                 $query->where($key, $value);
             }
         }
-        
+
         $data = $query->get()->toArray();
 
         if ($format === 'json') {
@@ -259,9 +260,10 @@ class Mint
      */
     public function getScenarioManager(): ScenarioManager
     {
-        if (!isset($this->scenarioManager)) {
+        if (! isset($this->scenarioManager)) {
             $this->scenarioManager = new ScenarioManager($this);
         }
+
         return $this->scenarioManager;
     }
 }

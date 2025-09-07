@@ -5,12 +5,12 @@ namespace LaravelMint;
 use Illuminate\Support\ServiceProvider;
 use LaravelMint\Console\Commands\AnalyzeCommand;
 use LaravelMint\Console\Commands\ClearCommand;
+use LaravelMint\Console\Commands\ExportCommand;
 use LaravelMint\Console\Commands\GenerateCommand;
 use LaravelMint\Console\Commands\ImportCommand;
-use LaravelMint\Console\Commands\ExportCommand;
-use LaravelMint\Console\Commands\ScenarioCommand;
 use LaravelMint\Console\Commands\PatternCommand;
 use LaravelMint\Console\Commands\PatternListCommand;
+use LaravelMint\Console\Commands\ScenarioCommand;
 use LaravelMint\Integration\FactoryIntegration;
 use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\WebhookManager;
@@ -32,6 +32,7 @@ class MintServiceProvider extends ServiceProvider
         $this->app->singleton(PatternRegistry::class, function ($app) {
             $registry = new PatternRegistry;
             $registry->initializeBuiltInPatterns();
+
             return $registry;
         });
 

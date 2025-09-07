@@ -4,12 +4,11 @@ namespace LaravelMint\Tests\Helpers;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 class TestModelFactory
 {
     protected static array $createdModels = [];
-    
+
     protected static int $modelCounter = 0;
 
     /**
@@ -20,22 +19,22 @@ class TestModelFactory
         // Generate a unique class name to avoid conflicts between tests
         // Include a counter to ensure uniqueness even for same model/attributes
         $uniqueSuffix = '';
-        if (!empty($relationships)) {
-            $uniqueSuffix .= '_' . substr(md5(serialize($relationships)), 0, 4);
+        if (! empty($relationships)) {
+            $uniqueSuffix .= '_'.substr(md5(serialize($relationships)), 0, 4);
         }
-        if (!empty($attributes)) {
-            $uniqueSuffix .= '_' . substr(md5(serialize($attributes)), 0, 4);
+        if (! empty($attributes)) {
+            $uniqueSuffix .= '_'.substr(md5(serialize($attributes)), 0, 4);
         }
         // Always add a counter to ensure true uniqueness
-        $uniqueSuffix .= '_' . self::$modelCounter++;
-        
+        $uniqueSuffix .= '_'.self::$modelCounter++;
+
         $className = "Test{$modelName}Model{$uniqueSuffix}";
         $tableName = strtolower($modelName).'s';
 
         // Use the default connection from the database manager
         $connection = app('db')->connection();
         $schema = $connection->getSchemaBuilder();
-        
+
         // Create the table
         if (! $schema->hasTable($tableName)) {
             $schema->create($tableName, function (Blueprint $table) use ($attributes, $relationships) {
@@ -46,7 +45,7 @@ class TestModelFactory
                     if (in_array($name, ['created_at', 'updated_at'])) {
                         continue;
                     }
-                    
+
                     switch ($type) {
                         case 'string':
                             $table->string($name)->nullable();
@@ -119,7 +118,7 @@ class TestModelFactory
     {
         $connection = app('db')->connection();
         $schema = $connection->getSchemaBuilder();
-        
+
         foreach (self::$createdModels as $className) {
             if (class_exists($className)) {
                 $instance = new $className;

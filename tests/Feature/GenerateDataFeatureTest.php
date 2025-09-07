@@ -16,15 +16,15 @@ class GenerateDataFeatureTest extends TestCase
     {
         parent::setUp();
         DatabaseSeeder::setupTestDatabase();
-        
+
         // Create test models that the commands expect
         $this->createTestModels();
     }
-    
+
     protected function createTestModels(): void
     {
         // Create User model in App\Models namespace
-        if (!class_exists('App\Models\User')) {
+        if (! class_exists('App\Models\User')) {
             eval('
                 namespace App\Models;
                 class User extends \Illuminate\Database\Eloquent\Model {
@@ -33,9 +33,9 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
-        
+
         // Create Post model
-        if (!class_exists('App\Models\Post')) {
+        if (! class_exists('App\Models\Post')) {
             eval('
                 namespace App\Models;
                 class Post extends \Illuminate\Database\Eloquent\Model {
@@ -44,9 +44,9 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
-        
+
         // Create Product model
-        if (!class_exists('App\Models\Product')) {
+        if (! class_exists('App\Models\Product')) {
             eval('
                 namespace App\Models;
                 class Product extends \Illuminate\Database\Eloquent\Model {
@@ -55,9 +55,9 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
-        
+
         // Create Category model
-        if (!class_exists('App\Models\Category')) {
+        if (! class_exists('App\Models\Category')) {
             eval('
                 namespace App\Models;
                 class Category extends \Illuminate\Database\Eloquent\Model {
@@ -66,9 +66,9 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
-        
+
         // Create Comment model
-        if (!class_exists('App\Models\Comment')) {
+        if (! class_exists('App\Models\Comment')) {
             eval('
                 namespace App\Models;
                 class Comment extends \Illuminate\Database\Eloquent\Model {
@@ -77,9 +77,9 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
-        
+
         // Create Order model
-        if (!class_exists('App\Models\Order')) {
+        if (! class_exists('App\Models\Order')) {
             eval('
                 namespace App\Models;
                 class Order extends \Illuminate\Database\Eloquent\Model {
@@ -137,13 +137,13 @@ class GenerateDataFeatureTest extends TestCase
             '--pattern' => 'normal',
             '--pattern-config' => 'field=price,mean=100,stddev=20',
         ]);
-        
+
         // Get output for debugging
         $output = Artisan::output();
-        
+
         // Check if command succeeded
         if ($result !== 0) {
-            $this->fail("Command failed with output: " . $output);
+            $this->fail('Command failed with output: '.$output);
         }
 
         // Verify pattern was applied
@@ -303,16 +303,16 @@ class GenerateDataFeatureTest extends TestCase
             'file' => $importPath,
             '--format' => 'json',
         ]);
-        
+
         // Debug output
         $output = Artisan::output();
-        
+
         // Verify command succeeded
-        $this->assertEquals(0, $result, "Import command failed with output: " . $output);
+        $this->assertEquals(0, $result, 'Import command failed with output: '.$output);
 
         // Verify data was imported
         $products = DB::table('products')->get();
-        $this->assertCount(3, $products, "Products not imported. Output: " . $output);
+        $this->assertCount(3, $products, 'Products not imported. Output: '.$output);
         $this->assertEquals('Product 1', $products[0]->name);
         $this->assertEquals(99.99, $products[0]->price);
 

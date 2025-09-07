@@ -11,7 +11,7 @@ class SimpleGenerator extends DataGenerator
     protected array $generatedModels = [];
 
     protected array $relationshipCache = [];
-    
+
     protected int $generatedCount = 0;
 
     /**
@@ -20,14 +20,14 @@ class SimpleGenerator extends DataGenerator
     public function generate(string $modelClass, int $count, array $options = []): Collection
     {
         $this->options = array_merge($this->options, $options);
-        
+
         // Re-seed Faker if seed is provided in options
         if (isset($options['seed'])) {
-            $this->faker->seed((int)$options['seed']);
+            $this->faker->seed((int) $options['seed']);
             // Reset the generated count for consistent results
             $this->generatedCount = 0;
         }
-        
+
         $generated = collect();
 
         // Show progress if in CLI
@@ -127,6 +127,7 @@ class SimpleGenerator extends DataGenerator
             // Skip if in overrides
             if (array_key_exists($column, $overrides)) {
                 $record[$column] = $overrides[$column];
+
                 continue;
             }
 
@@ -161,8 +162,8 @@ class SimpleGenerator extends DataGenerator
             } else {
                 // Check if we should use a pattern for this field
                 $patternConfig = $this->options['pattern_config'] ?? [];
-                if (isset($this->options['pattern']) && 
-                    isset($patternConfig['field']) && 
+                if (isset($this->options['pattern']) &&
+                    isset($patternConfig['field']) &&
                     $patternConfig['field'] === $column) {
                     // Generate value using pattern
                     $record[$column] = $this->generatePatternValue($this->options['pattern'], $patternConfig);
@@ -542,39 +543,40 @@ class SimpleGenerator extends DataGenerator
         if ($pattern === 'normal' || $pattern === 'distribution.normal') {
             $mean = $config['mean'] ?? 100;
             $stddev = $config['stddev'] ?? 20;
-            
+
             // Generate a normal distribution value using Box-Muller transform
             $u = $this->faker->randomFloat(4, 0.0001, 0.9999);
             $v = $this->faker->randomFloat(4, 0.0001, 0.9999);
             $z = sqrt(-2.0 * log($u)) * cos(2.0 * pi() * $v);
-            
+
             return round($mean + ($z * $stddev), 2);
         }
-        
+
         // Handle exponential pattern
         if ($pattern === 'exponential' || $pattern === 'distribution.exponential') {
             $lambda = $config['lambda'] ?? 1.0;
             $u = $this->faker->randomFloat(4, 0.0001, 0.9999);
+
             return round(-log(1 - $u) / $lambda, 2);
         }
-        
+
         // Handle seasonal pattern
         if ($pattern === 'seasonal' || $pattern === 'temporal.seasonal') {
             $base = $config['base'] ?? 100;
             $amplitude = $config['amplitude'] ?? 50;
             $period = $config['period'] ?? 12;
-            
+
             // Use current index as time
             $time = $this->generatedCount ?? 0;
             $value = $base + $amplitude * sin(2 * pi() * $time / $period);
-            
+
             return round($value, 2);
         }
-        
+
         // Default to random value
         return $this->faker->randomFloat(2, 10, 1000);
     }
-    
+
     /**
      * Check if field needs special handling
      */
@@ -649,17 +651,17 @@ class SimpleGenerator extends DataGenerator
         if (str_contains($columnLower, 'slug')) {
             return $this->faker->slug();
         }
-        
+
         // SKU fields
         if ($columnLower === 'sku') {
-            return 'SKU-' . $this->faker->unique()->numberBetween(10000, 99999);
+            return 'SKU-'.$this->faker->unique()->numberBetween(10000, 99999);
         }
-        
+
         // ISBN fields
         if ($columnLower === 'isbn' || str_contains($columnLower, '_isbn')) {
             return $this->faker->isbn13();
         }
-        
+
         // Name fields
         if ($columnLower === 'name' || str_contains($columnLower, '_name')) {
             // Handle different types of name fields
@@ -673,12 +675,12 @@ class SimpleGenerator extends DataGenerator
                 return $this->faker->name();
             }
         }
-        
+
         // Email fields
         if ($columnLower === 'email' || str_contains($columnLower, 'email')) {
             return $this->faker->unique()->safeEmail();
         }
-        
+
         // Password fields
         if ($columnLower === 'password' || str_contains($columnLower, 'password')) {
             return bcrypt('password');

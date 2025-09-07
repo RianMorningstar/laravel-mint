@@ -18,7 +18,7 @@ class NormalDistribution extends AbstractPattern implements DistributionInterfac
     {
         $this->name = 'Normal Distribution';
         $this->description = 'Generates values following a normal (Gaussian) distribution';
-        
+
         // Use defaults if not provided
         $this->mean = $this->getConfig('mean', 100);
         $this->stddev = $this->getConfig('stddev', 20);

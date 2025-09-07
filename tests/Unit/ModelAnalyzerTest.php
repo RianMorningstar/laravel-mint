@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\Schema;
 use LaravelMint\Analyzers\ModelAnalyzer;
 use LaravelMint\Analyzers\RelationshipMapper;
 use LaravelMint\Analyzers\SchemaInspector;
+use LaravelMint\Mint;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
 use LaravelMint\Tests\Helpers\DatabaseSeeder;
 use LaravelMint\Tests\Helpers\TestModelFactory;
 use LaravelMint\Tests\TestCase;
-use LaravelMint\Mint;
 use Mockery;
 
 class ModelAnalyzerTest extends TestCase
@@ -36,7 +36,7 @@ class ModelAnalyzerTest extends TestCase
         $this->analyzer = new ModelAnalyzer($this->mint);
 
         DatabaseSeeder::setupTestDatabase();
-        
+
         // Clear all Mint analysis cache to ensure clean state
         \Illuminate\Support\Facades\Cache::flush();
     }
@@ -90,16 +90,16 @@ class ModelAnalyzerTest extends TestCase
         $instance = new $modelClass;
         $tableName = $instance->getTable();
         $this->assertTrue(Schema::hasTable($tableName), "Table {$tableName} does not exist");
-        
+
         // Check columns exist
         $columns = Schema::getColumnListing($tableName);
-        $this->assertContains('string_field', $columns, 'Column string_field not found. Available columns: ' . implode(', ', $columns));
-        
+        $this->assertContains('string_field', $columns, 'Column string_field not found. Available columns: '.implode(', ', $columns));
+
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
 
         // Check that attributes exist
-        $this->assertArrayHasKey('string_field', $attributes, 'Missing string_field. Available: ' . implode(', ', array_keys($attributes)));
+        $this->assertArrayHasKey('string_field', $attributes, 'Missing string_field. Available: '.implode(', ', array_keys($attributes)));
         $this->assertEquals('string', $attributes['string_field']['type']);
         $this->assertEquals('integer', $attributes['integer_field']['type']);
         $this->assertEquals('boolean', $attributes['boolean_field']['type']);
@@ -115,11 +115,11 @@ class ModelAnalyzerTest extends TestCase
             'required_field' => 'string',
             'optional_field' => 'string',
         ]);
-        
+
         // Get Mint's connection to ensure we're using the same one
         $connection = $this->mint->getConnection();
         $schemaBuilder = $connection->getSchemaBuilder();
-        
+
         // Now modify the table structure to make one field nullable and one not
         $schemaBuilder->dropIfExists('nullabletests');
         $schemaBuilder->create('nullabletests', function ($table) {
@@ -131,40 +131,40 @@ class ModelAnalyzerTest extends TestCase
 
         // Clear any cache
         \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
-        
+
         // Verify table exists and has columns using Mint's connection
         $this->assertTrue($schemaBuilder->hasTable('nullabletests'), 'Table nullabletests should exist');
         $columnNames = $schemaBuilder->getColumnListing('nullabletests');
-        $this->assertNotEmpty($columnNames, 'Table should have columns. Got: ' . json_encode($columnNames));
-        
+        $this->assertNotEmpty($columnNames, 'Table should have columns. Got: '.json_encode($columnNames));
+
         // Check if Mint uses the same connection
         $mint = $this->app->make('LaravelMint\Mint');
         $mintConnection = $mint->getConnection();
         $mintColumns = $mintConnection->getSchemaBuilder()->getColumnListing('nullabletests');
-        $this->assertNotEmpty($mintColumns, 'Mint connection should see columns. Got: ' . json_encode($mintColumns));
+        $this->assertNotEmpty($mintColumns, 'Mint connection should see columns. Got: '.json_encode($mintColumns));
 
         // Test directly with SchemaInspector to isolate the issue
         $inspector = new \LaravelMint\Analyzers\SchemaInspector($this->app->make('LaravelMint\Mint'));
         $schemaData = $inspector->inspect($modelClass);
-        
+
         // Debug: What columns does SchemaInspector see?
         $this->assertArrayHasKey('columns', $schemaData, 'SchemaData should have columns');
-        $this->assertNotEmpty($schemaData['columns'], 'Columns should not be empty. Got: ' . json_encode(array_keys($schemaData['columns'])));
-        
+        $this->assertNotEmpty($schemaData['columns'], 'Columns should not be empty. Got: '.json_encode(array_keys($schemaData['columns'])));
+
         // If this passes, the issue is in ModelAnalyzer, not SchemaInspector
         $this->assertTrue($schemaData['columns']['optional_field']['nullable'] ?? false,
-            'SchemaInspector should detect optional_field as nullable. Got: ' . json_encode($schemaData['columns']['optional_field'] ?? 'not found'));
-        
+            'SchemaInspector should detect optional_field as nullable. Got: '.json_encode($schemaData['columns']['optional_field'] ?? 'not found'));
+
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
 
         $this->assertArrayHasKey('required_field', $attributes, 'required_field should exist in attributes');
         $this->assertArrayHasKey('optional_field', $attributes, 'optional_field should exist in attributes');
 
-        $this->assertFalse($attributes['required_field']['nullable'] ?? true, 
+        $this->assertFalse($attributes['required_field']['nullable'] ?? true,
             'required_field should not be nullable');
         $this->assertTrue($attributes['optional_field']['nullable'] ?? false,
-            'optional_field should be nullable. Attributes: ' . json_encode($attributes['optional_field']));
+            'optional_field should be nullable. Attributes: '.json_encode($attributes['optional_field']));
     }
 
     public function test_detect_unique_constraints()
@@ -172,7 +172,7 @@ class ModelAnalyzerTest extends TestCase
         // Get Mint's connection first
         $connection = $this->mint->getConnection();
         $schemaBuilder = $connection->getSchemaBuilder();
-        
+
         // Create the table with unique constraints
         $schemaBuilder->dropIfExists('uniquetests');
         $schemaBuilder->create('uniquetests', function ($table) {
@@ -181,7 +181,7 @@ class ModelAnalyzerTest extends TestCase
             $table->string('username')->unique();
             $table->timestamps();
         });
-        
+
         // Now create the model class
         $modelClass = TestModelFactory::create('UniqueTest', [
             'email' => 'string',
@@ -208,7 +208,7 @@ class ModelAnalyzerTest extends TestCase
         // Get Mint's connection to ensure we're using the same one
         $connection = $this->mint->getConnection();
         $schemaBuilder = $connection->getSchemaBuilder();
-        
+
         // Recreate table with defaults since SQLite doesn't support ALTER COLUMN well
         $schemaBuilder->dropIfExists('defaulttests');
         $schemaBuilder->create('defaulttests', function ($table) {
@@ -300,7 +300,7 @@ class ModelAnalyzerTest extends TestCase
         // Get Mint's connection first
         $connection = $this->mint->getConnection();
         $schemaBuilder = $connection->getSchemaBuilder();
-        
+
         // Create the table with indexes
         $schemaBuilder->dropIfExists('indextests');
         $schemaBuilder->create('indextests', function ($table) {
@@ -311,7 +311,7 @@ class ModelAnalyzerTest extends TestCase
             $table->datetime('updated_at')->nullable();
             $table->index(['status', 'created_at']);
         });
-        
+
         // Now create the model class
         $modelClass = TestModelFactory::create('IndexTest', [
             'email' => 'string',

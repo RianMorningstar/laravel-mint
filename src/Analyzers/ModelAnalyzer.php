@@ -56,7 +56,7 @@ class ModelAnalyzer
 
         // Create 'attributes' with field information
         $attributes = [];
-        if (isset($schemaInfo['columns']) && !empty($schemaInfo['columns'])) {
+        if (isset($schemaInfo['columns']) && ! empty($schemaInfo['columns'])) {
             foreach ($schemaInfo['columns'] as $column => $details) {
                 $attributes[$column] = [
                     'type' => $details['type'] ?? 'string',
@@ -178,7 +178,7 @@ class ModelAnalyzer
             try {
                 // Try to call the method and check if it returns a relation
                 $result = $method->invoke($instance);
-                
+
                 if (is_object($result)) {
                     $resultClass = get_class($result);
                     if ($this->isRelationClass($resultClass)) {
@@ -187,7 +187,7 @@ class ModelAnalyzer
                         if (method_exists($result, 'getRelated')) {
                             $relatedModel = get_class($result->getRelated());
                         }
-                        
+
                         $relations[$method->getName()] = [
                             'type' => $this->getRelationType($resultClass),
                             'class' => $resultClass,
@@ -404,21 +404,21 @@ class ModelAnalyzer
             $connection = $this->mint->getConnection();
             $schemaInspector = new SchemaInspector($this->mint);
             $schemaInfo = $schemaInspector->inspectTable($table);
-            
+
             if (isset($schemaInfo['columns'][$column])) {
                 return $schemaInfo['columns'][$column];
             }
         } catch (\Exception $e) {
             // Fallback to defaults
         }
-        
+
         return [
             'nullable' => false,
             'default' => null,
             'unique' => false,
         ];
     }
-    
+
     protected function suggestValidationRules(array $attributes): array
     {
         $suggestions = [];
@@ -428,7 +428,7 @@ class ModelAnalyzer
             $type = $details['type'] ?? 'string';
 
             // Required/nullable
-            if (!($details['nullable'] ?? true)) {
+            if (! ($details['nullable'] ?? true)) {
                 $rules[] = 'required';
             } else {
                 $rules[] = 'nullable';
@@ -464,7 +464,7 @@ class ModelAnalyzer
 
             // Length constraint
             if (isset($details['length'])) {
-                $rules[] = 'max:' . $details['length'];
+                $rules[] = 'max:'.$details['length'];
             }
 
             $suggestions[$fieldName] = $rules;

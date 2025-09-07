@@ -88,9 +88,9 @@ class ScenarioManager
             if ($scenarioConfig instanceof ScenarioInterface) {
                 return $scenarioConfig->run($options);
             }
-            throw new \InvalidArgumentException("Invalid scenario object");
+            throw new \InvalidArgumentException('Invalid scenario object');
         }
-        
+
         // Handle scenario objects stored in 'instance' key
         if (isset($scenarioConfig['instance']) && $scenarioConfig['instance'] instanceof ScenarioInterface) {
             return $scenarioConfig['instance']->run($options);
@@ -99,6 +99,7 @@ class ScenarioManager
         // Handle scenario config arrays
         if (isset($scenarioConfig['class']) && class_exists($scenarioConfig['class'])) {
             $scenarioInstance = new $scenarioConfig['class']($this->mint);
+
             return $scenarioInstance->run($options);
         } else {
             // Default simple scenario
@@ -122,9 +123,9 @@ class ScenarioManager
             $this->mint->generate($model, $count, $options);
             $recordsCreated += $count;
         }
-        
+
         $duration = microtime(true) - $startTime;
-        
+
         return new ScenarioResult(true, [
             'records_created' => $recordsCreated,
             'duration' => $duration,
@@ -169,16 +170,16 @@ class ScenarioManager
     public function loadFromConfig(): void
     {
         $config = config('mint.scenarios', []);
-        
+
         foreach ($config as $key => $scenarioConfig) {
-            if (!isset($scenarioConfig['enabled']) || !$scenarioConfig['enabled']) {
+            if (! isset($scenarioConfig['enabled']) || ! $scenarioConfig['enabled']) {
                 continue;
             }
-            
+
             if (isset($scenarioConfig['class'])) {
                 $class = $scenarioConfig['class'];
                 if (class_exists($class)) {
-                    $instance = new $class();
+                    $instance = new $class;
                     $this->register($key, $instance);
                 }
             } else {
@@ -186,7 +187,7 @@ class ScenarioManager
             }
         }
     }
-    
+
     /**
      * Check if a scenario exists
      */
@@ -200,25 +201,25 @@ class ScenarioManager
      */
     public function get(string $name): ?ScenarioInterface
     {
-        if (!$this->has($name)) {
+        if (! $this->has($name)) {
             return null;
         }
 
         $scenario = $this->scenarios[$name];
-        
+
         // If it's already a scenario object, return it
         if (is_object($scenario) && $scenario instanceof ScenarioInterface) {
             return $scenario;
         }
-        
+
         if (isset($scenario['instance'])) {
             return $scenario['instance'];
         }
-        
+
         if (isset($scenario['class']) && class_exists($scenario['class'])) {
             return new $scenario['class']($this->mint);
         }
-        
+
         return null;
     }
 
@@ -228,7 +229,7 @@ class ScenarioManager
     public function list(): array
     {
         $list = [];
-        
+
         foreach ($this->scenarios as $name => $scenario) {
             if (is_object($scenario)) {
                 // Handle scenario objects
@@ -244,8 +245,7 @@ class ScenarioManager
                 ];
             }
         }
-        
+
         return $list;
     }
-
 }

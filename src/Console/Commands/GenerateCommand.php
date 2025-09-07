@@ -39,15 +39,15 @@ class GenerateCommand extends Command
     {
         $model = $this->argument('model');
         $count = (int) $this->argument('count');
-        
+
         // Parse attributes
         $attributes = [];
         $attributeStrings = $this->option('attributes');
-        
+
         if (is_string($attributeStrings)) {
             $attributeStrings = [$attributeStrings];
         }
-        
+
         foreach ($attributeStrings as $attrString) {
             if (strpos($attrString, ',') !== false) {
                 // Handle comma-separated attributes
@@ -63,7 +63,7 @@ class GenerateCommand extends Command
                 $attributes[trim($key)] = $this->parseValue(trim($value));
             }
         }
-        
+
         // Parse pattern config
         $patternConfig = [];
         $patternConfigStrings = $this->option('pattern-config');
@@ -85,10 +85,10 @@ class GenerateCommand extends Command
                 $patternConfig[trim($key)] = $this->parseValue(trim($value));
             }
         }
-        
+
         $options = array_merge($attributes, [
             'pattern' => $this->option('pattern'),
-            'pattern_config' => !empty($patternConfig) ? $patternConfig : null,
+            'pattern_config' => ! empty($patternConfig) ? $patternConfig : null,
             'with_relationships' => $this->option('with-relationships'),
             'chunk' => (int) $this->option('chunk'),
             'scale' => (float) $this->option('scale'),
@@ -96,44 +96,52 @@ class GenerateCommand extends Command
             'silent' => $this->option('silent'),
             'performance' => $this->option('performance'),
         ]);
-        
+
         // Remove null options
-        $options = array_filter($options, fn($v) => $v !== null);
-        
+        $options = array_filter($options, fn ($v) => $v !== null);
+
         try {
             $mint = app(Mint::class);
-            
-            if (!$this->option('silent')) {
+
+            if (! $this->option('silent')) {
                 $this->info("Generating {$count} {$model} records...");
             }
-            
+
             $result = $mint->generate($model, $count, $options);
-            
-            if (!$this->option('silent')) {
+
+            if (! $this->option('silent')) {
                 $this->info("Successfully generated {$count} records.");
             }
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Failed to generate data: " . $e->getMessage());
-            if (!$this->option('silent')) {
-                $this->error("Stack trace: " . $e->getTraceAsString());
+            $this->error('Failed to generate data: '.$e->getMessage());
+            if (! $this->option('silent')) {
+                $this->error('Stack trace: '.$e->getTraceAsString());
             }
+
             return self::FAILURE;
         }
     }
-    
+
     /**
      * Parse attribute value
      */
     protected function parseValue($value)
     {
-        if ($value === 'true') return true;
-        if ($value === 'false') return false;
-        if ($value === 'null') return null;
+        if ($value === 'true') {
+            return true;
+        }
+        if ($value === 'false') {
+            return false;
+        }
+        if ($value === 'null') {
+            return null;
+        }
         if (is_numeric($value)) {
             return strpos($value, '.') !== false ? (float) $value : (int) $value;
         }
+
         return $value;
     }
 }

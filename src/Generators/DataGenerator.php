@@ -36,7 +36,7 @@ abstract class DataGenerator
         $this->faker = FakerFactory::create();
 
         if ($seed !== null) {
-            $this->faker->seed((int)$seed);
+            $this->faker->seed((int) $seed);
         }
     }
 

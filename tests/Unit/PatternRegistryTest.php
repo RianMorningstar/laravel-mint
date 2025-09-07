@@ -230,16 +230,16 @@ class PatternRegistryTest extends TestCase
             'stddev' => 10,
             // mean defaults to 100
         ]);
-        
+
         $this->assertInstanceOf(NormalDistribution::class, $pattern);
         $this->assertEquals(100, $pattern->getMean()); // Check default was applied
-        
+
         // Test invalid configuration - negative stddev should fail
         $invalidPattern = new NormalDistribution([
             'mean' => 50,
             'stddev' => -10, // Invalid: negative standard deviation
         ]);
-        
+
         // The validateSpecific method should handle this
         $this->assertFalse($invalidPattern->validate(['stddev' => -10]));
     }

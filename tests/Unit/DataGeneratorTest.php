@@ -4,13 +4,12 @@ namespace LaravelMint\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
 use LaravelMint\Generators\DataGenerator;
-use LaravelMint\Generators\PatternAwareGenerator;
 use LaravelMint\Generators\SimpleGenerator;
+use LaravelMint\Mint;
 use LaravelMint\Patterns\PatternRegistry;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
 use LaravelMint\Tests\Helpers\TestModelFactory;
 use LaravelMint\Tests\TestCase;
-use LaravelMint\Mint;
 use Mockery;
 
 class DataGeneratorTest extends TestCase
@@ -29,7 +28,7 @@ class DataGeneratorTest extends TestCase
 
         $this->mint = $this->app->make(Mint::class);
         $this->patternRegistry = $this->app->make(PatternRegistry::class);
-        
+
         // Create a mock model analysis for testing
         $analysis = [
             'model' => 'TestModel',
@@ -49,7 +48,7 @@ class DataGeneratorTest extends TestCase
             ],
             'relationships' => [],
         ];
-        
+
         $this->generator = new TestableDataGenerator($this->mint, $analysis);
     }
 
@@ -219,7 +218,7 @@ class DataGeneratorTest extends TestCase
         // Update the analysis for the test model
         $analysis = $this->mint->analyze($modelClass);
         $generator = new TestableDataGenerator($this->mint, $analysis);
-        
+
         $data = $generator->generateTestRecord($modelClass);
 
         $this->assertIsArray($data);
@@ -237,11 +236,11 @@ class DataGeneratorTest extends TestCase
         ]);
 
         $count = 10;
-        
+
         // Update the analysis for the test model
         $analysis = $this->mint->analyze($modelClass);
         $generator = new TestableDataGenerator($this->mint, $analysis);
-        
+
         $batch = [];
         for ($i = 0; $i < $count; $i++) {
             $batch[] = $generator->generateTestRecord($modelClass);
@@ -277,7 +276,7 @@ class DataGeneratorTest extends TestCase
         $generator = new TestableDataGenerator($this->mint, $analysis, [
             'relationships' => ['user' => $user],
         ]);
-        
+
         $data = $generator->generateTestRecord($postClass);
 
         $this->assertEquals($user->id, $data['user_id']);
@@ -319,7 +318,7 @@ class DataGeneratorTest extends TestCase
             ],
             'relationships' => [],
         ];
-        
+
         $generator = new TestableDataGenerator($this->mint, $analysis);
 
         $value = $generator->generateFieldValue('string', 'address');
@@ -369,7 +368,7 @@ class TestableDataGenerator extends SimpleGenerator
             'type' => $type,
             'name' => $fieldName,
         ], $constraints);
-        
+
         // Handle special field names
         if ($fieldName === 'email') {
             return $this->faker->email();
@@ -380,38 +379,38 @@ class TestableDataGenerator extends SimpleGenerator
         if ($fieldName === 'phone_number') {
             return $this->faker->phoneNumber();
         }
-        
+
         // Handle constraints
         if (isset($constraints['in'])) {
             return $this->faker->randomElement($constraints['in']);
         }
-        
+
         if (isset($constraints['pattern'])) {
             return $this->faker->regexify($constraints['pattern']);
         }
-        
+
         if (isset($constraints['unique']) && $constraints['unique']) {
             return $this->faker->unique()->word();
         }
-        
+
         if (isset($constraints['nullable']) && $constraints['nullable'] && $this->faker->boolean(30)) {
             return null;
         }
-        
+
         // Handle min/max for integers
         if ($type === 'integer' && isset($constraints['min']) && isset($constraints['max'])) {
             return $this->faker->numberBetween($constraints['min'], $constraints['max']);
         }
-        
+
         // Default positive integers for count-like fields
         if ($type === 'integer' && in_array($fieldName, ['count', 'quantity', 'stock'])) {
             $columnDetails['unsigned'] = true;
         }
-        
+
         // Generate by type
         return $this->generateByType($type, $columnDetails);
     }
-    
+
     public function generateTestRecord(string $modelClass): array
     {
         return $this->generateRecord($modelClass, ['user_id' => 1]);

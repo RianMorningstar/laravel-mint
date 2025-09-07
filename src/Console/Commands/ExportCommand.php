@@ -20,7 +20,7 @@ class ExportCommand extends Command
         $model = $this->argument('model');
         $file = $this->argument('file');
         $format = $this->option('format');
-        
+
         $conditions = [];
         foreach ($this->option('where') as $where) {
             if (strpos($where, '=') !== false) {
@@ -28,15 +28,17 @@ class ExportCommand extends Command
                 $conditions[$key] = $value;
             }
         }
-        
+
         try {
             $mint = app(Mint::class);
             $mint->export($model, $file, $format, $conditions);
-            
+
             $this->info("Data exported to {$file}");
+
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Export failed: " . $e->getMessage());
+            $this->error('Export failed: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

@@ -23,10 +23,10 @@ class SchemaInspector
 
         $instance = new $modelClass;
         $table = $instance->getTable();
-        
+
         return $this->inspectTable($table);
     }
-    
+
     public function inspectTable(string $table): array
     {
         $connection = $this->mint->getConnection();
@@ -185,18 +185,18 @@ class SchemaInspector
                         // Handle escaped quotes inside the value
                         $default = str_replace("''", "'", $default);
                     }
-                    
+
                     // After removing quotes, check if we need type conversion
                     $columnType = strtolower($columnInfo->type);
                     if (is_numeric($default)) {
                         if (str_contains($columnType, 'int')) {
-                            $default = (int)$default;
+                            $default = (int) $default;
                         } elseif (str_contains($columnType, 'real') || str_contains($columnType, 'float') || str_contains($columnType, 'double') || str_contains($columnType, 'decimal')) {
-                            $default = (float)$default;
+                            $default = (float) $default;
                         }
                     }
                 }
-                
+
                 return [
                     'nullable' => $columnInfo->notnull ? false : true,
                     'default' => $default,
@@ -263,12 +263,12 @@ class SchemaInspector
                 foreach ($rawIndexes as $index) {
                     $indexName = $index->name;
                     $indexInfo = $connection->select("PRAGMA index_info({$indexName})");
-                    
+
                     $columns = [];
                     foreach ($indexInfo as $col) {
                         $columns[] = $col->name;
                     }
-                    
+
                     // For test compatibility, create separate entries for each column
                     // if it's a single-column index
                     if (count($columns) === 1) {

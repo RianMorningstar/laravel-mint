@@ -15,18 +15,18 @@ class PatternListCommand extends Command
     public function handle(): int
     {
         $registry = app(PatternRegistry::class);
-        
+
         $category = $this->option('category');
-        $patterns = $category 
+        $patterns = $category
             ? $registry->getByCategory($category)
             : $registry->all();
-        
-        $this->info("Available Patterns" . ($category ? " in category '{$category}'" : "") . ":");
-        
+
+        $this->info('Available Patterns'.($category ? " in category '{$category}'" : '').':');
+
         foreach ($patterns as $name => $class) {
             $this->line(" - {$name}");
         }
-        
+
         return self::SUCCESS;
     }
 }

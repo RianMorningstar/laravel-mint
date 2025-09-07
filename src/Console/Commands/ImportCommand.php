@@ -34,30 +34,32 @@ class ImportCommand extends Command
         $file = $this->argument('file');
         $format = $this->option('format');
         $chunkSize = (int) $this->option('chunk');
-        
-        if (!file_exists($file)) {
+
+        if (! file_exists($file)) {
             $this->error("File not found: {$file}");
+
             return self::FAILURE;
         }
-        
+
         try {
             $mint = app(Mint::class);
-            
+
             $this->info("Importing data from {$file}...");
-            
+
             $result = $mint->import($model, $file, $format, [
                 'chunk_size' => $chunkSize,
             ]);
-            
+
             $this->info("Successfully imported {$result['imported']} records.");
-            
-            if (!empty($result['errors'])) {
+
+            if (! empty($result['errors'])) {
                 $this->warn("Encountered {$result['errors']} errors during import.");
             }
-            
+
             return self::SUCCESS;
         } catch (\Exception $e) {
-            $this->error("Failed to import data: " . $e->getMessage());
+            $this->error('Failed to import data: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
