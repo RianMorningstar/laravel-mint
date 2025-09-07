@@ -67,6 +67,7 @@ class SchemaInspector
             'unsigned' => false,
             'auto_increment' => false,
             'comment' => null,
+            'unique' => false,
         ];
 
         try {
@@ -79,6 +80,15 @@ class SchemaInspector
             }
         } catch (\Exception $e) {
             // Fallback to basic details if driver-specific query fails
+        }
+
+        // Check if column is part of a unique index
+        $indexes = $this->getIndexes($table, $connection);
+        foreach ($indexes as $index) {
+            if ($index['unique'] && count($index['columns']) === 1 && in_array($column, $index['columns'])) {
+                $details['unique'] = true;
+                break;
+            }
         }
 
         // Infer data generation hints

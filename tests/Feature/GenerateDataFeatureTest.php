@@ -16,6 +16,56 @@ class GenerateDataFeatureTest extends TestCase
     {
         parent::setUp();
         DatabaseSeeder::setupTestDatabase();
+        
+        // Create test models that the commands expect
+        $this->createTestModels();
+    }
+    
+    protected function createTestModels(): void
+    {
+        // Create User model in App\Models namespace
+        if (!class_exists('App\Models\User')) {
+            eval('
+                namespace App\Models;
+                class User extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "users";
+                    protected $fillable = ["name", "email", "password"];
+                }
+            ');
+        }
+        
+        // Create Post model
+        if (!class_exists('App\Models\Post')) {
+            eval('
+                namespace App\Models;
+                class Post extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "posts";
+                    protected $fillable = ["user_id", "title", "content", "status", "views"];
+                }
+            ');
+        }
+        
+        // Create Product model
+        if (!class_exists('App\Models\Product')) {
+            eval('
+                namespace App\Models;
+                class Product extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "products";
+                    protected $fillable = ["name", "price", "stock", "category_id"];
+                }
+            ');
+        }
+        
+        // Create Category model
+        if (!class_exists('App\Models\Category')) {
+            eval('
+                namespace App\Models;
+                class Category extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "categories";
+                    protected $fillable = ["name", "parent_id"];
+                }
+            ');
+        }
     }
 
     protected function tearDown(): void

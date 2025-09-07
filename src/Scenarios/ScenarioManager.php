@@ -183,7 +183,9 @@ class ScenarioManager
             }
             
             if (isset($config['class']) && class_exists($config['class'])) {
-                $this->scenarios[$name] = $config;
+                // Instantiate the scenario class
+                $scenario = new $config['class']();
+                $this->scenarios[$name] = $scenario;
             }
         }
     }

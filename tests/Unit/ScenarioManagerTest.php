@@ -312,21 +312,17 @@ class ScenarioManagerTest extends TestCase
 
     public function test_scenario_with_callbacks()
     {
-        $beforeCalled = false;
-        $afterCalled = false;
+        $callbackState = ['before' => false, 'after' => false];
 
-        $scenario = new class($beforeCalled, $afterCalled) extends BaseScenario
+        $scenario = new class($callbackState) extends BaseScenario
         {
             protected string $name = 'callback-scenario';
 
-            private $before;
+            private array $state;
 
-            private $after;
-
-            public function __construct(&$before, &$after)
+            public function __construct(array &$state)
             {
-                $this->before = &$before;
-                $this->after = &$after;
+                $this->state = &$state;
                 parent::__construct();
             }
 
@@ -350,12 +346,12 @@ class ScenarioManagerTest extends TestCase
 
             protected function beforeRun(): void
             {
-                $this->before = true;
+                $this->state['before'] = true;
             }
 
             protected function afterRun(ScenarioResult $result): void
             {
-                $this->after = true;
+                $this->state['after'] = true;
             }
         };
 
@@ -363,8 +359,8 @@ class ScenarioManagerTest extends TestCase
 
         $scenario->run();
 
-        $this->assertTrue($beforeCalled);
-        $this->assertTrue($afterCalled);
+        $this->assertTrue($callbackState['before']);
+        $this->assertTrue($callbackState['after']);
     }
 
     public function test_scenario_error_handling()

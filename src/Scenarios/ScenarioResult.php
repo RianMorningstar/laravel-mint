@@ -102,16 +102,36 @@ class ScenarioResult
      */
     public function getData(): array
     {
-        return array_merge($this->data, [
-            'generated' => $this->generated,
-            'statistics' => $this->statistics,
-            'errors' => $this->errors,
-            'error' => !empty($this->errors) ? $this->errors[0] : null,
-            'records' => $this->getTotalGenerated(),
-            'duration' => $this->executionTime,
-            'memory' => $this->memoryUsage,
-            'records_created' => $this->getTotalGenerated(),
-        ]);
+        // Start with provided data, then add computed values (but don't override)
+        $result = $this->data;
+        
+        // Only add computed values if they're not already in data
+        if (!isset($result['generated'])) {
+            $result['generated'] = $this->generated;
+        }
+        if (!isset($result['statistics'])) {
+            $result['statistics'] = $this->statistics;
+        }
+        if (!isset($result['errors'])) {
+            $result['errors'] = $this->errors;
+        }
+        if (!isset($result['error']) && !empty($this->errors)) {
+            $result['error'] = $this->errors[0];
+        }
+        if (!isset($result['records'])) {
+            $result['records'] = $this->data['records'] ?? $this->getTotalGenerated();
+        }
+        if (!isset($result['duration'])) {
+            $result['duration'] = $this->data['duration'] ?? $this->executionTime;
+        }
+        if (!isset($result['memory'])) {
+            $result['memory'] = $this->data['memory'] ?? $this->memoryUsage;
+        }
+        if (!isset($result['records_created'])) {
+            $result['records_created'] = $this->data['records_created'] ?? $this->getTotalGenerated();
+        }
+        
+        return $result;
     }
 
     public function getTotalGenerated(): int

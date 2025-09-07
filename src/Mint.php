@@ -23,6 +23,8 @@ class Mint
     protected RelationshipMapper $relationshipMapper;
 
     protected ?DataGenerator $generator = null;
+    
+    protected ?ScenarioManager $scenarioManager = null;
 
     protected array $config;
 
@@ -92,10 +94,18 @@ class Mint
         return $results;
     }
 
-    public function clear(?string $modelClass = null): int
+    public function clear(?string $modelClass = null, array $conditions = []): int
     {
         if ($modelClass) {
-            return $modelClass::query()->delete();
+            $query = $modelClass::query();
+            
+            if (!empty($conditions)) {
+                foreach ($conditions as $key => $value) {
+                    $query->where($key, $value);
+                }
+            }
+            
+            return $query->delete();
         }
 
         // Clear all generated data (would need tracking mechanism)
@@ -183,9 +193,17 @@ class Mint
         ];
     }
 
-    public function export(string $modelClass, string $path, string $format = 'json'): void
+    public function export(string $modelClass, string $path, string $format = 'json', array $conditions = []): void
     {
-        $data = $modelClass::all()->toArray();
+        $query = $modelClass::query();
+        
+        if (!empty($conditions)) {
+            foreach ($conditions as $key => $value) {
+                $query->where($key, $value);
+            }
+        }
+        
+        $data = $query->get()->toArray();
 
         if ($format === 'json') {
             file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT));
@@ -201,7 +219,7 @@ class Mint
         }
     }
 
-    public function import(string $modelClass, string $path, string $format = 'json'): array
+    public function import(string $modelClass, string $path, string $format = 'json', array $options = []): array
     {
         if ($format === 'json') {
             $data = json_decode(file_get_contents($path), true);
@@ -221,5 +239,16 @@ class Mint
         $result = $scenarioManager->run($scenario, $options);
 
         return $result->toArray();
+    }
+
+    /**
+     * Get the scenario manager instance
+     */
+    public function getScenarioManager(): ScenarioManager
+    {
+        if (!isset($this->scenarioManager)) {
+            $this->scenarioManager = new ScenarioManager($this);
+        }
+        return $this->scenarioManager;
     }
 }

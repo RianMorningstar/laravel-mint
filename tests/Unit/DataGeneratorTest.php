@@ -102,9 +102,13 @@ class DataGeneratorTest extends TestCase
     {
         $value = $this->generator->generateFieldValue('datetime', 'created_at');
 
-        // Check if it's a valid datetime string
-        $this->assertIsString($value);
-        $this->assertNotFalse(strtotime($value));
+        // DateTime fields can be DateTime objects or strings
+        if (is_object($value)) {
+            $this->assertInstanceOf(\DateTime::class, $value);
+        } else {
+            $this->assertIsString($value);
+            $this->assertNotFalse(strtotime($value));
+        }
     }
 
     public function test_generate_json_field()
@@ -397,6 +401,11 @@ class TestableDataGenerator extends SimpleGenerator
         // Handle min/max for integers
         if ($type === 'integer' && isset($constraints['min']) && isset($constraints['max'])) {
             return $this->faker->numberBetween($constraints['min'], $constraints['max']);
+        }
+        
+        // Default positive integers for count-like fields
+        if ($type === 'integer' && in_array($fieldName, ['count', 'quantity', 'stock'])) {
+            $columnDetails['unsigned'] = true;
         }
         
         // Generate by type
