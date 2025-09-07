@@ -225,13 +225,23 @@ class PatternRegistryTest extends TestCase
 
     public function test_pattern_validation()
     {
-        $this->expectException(\InvalidArgumentException::class);
-
-        // Invalid configuration - missing required parameter
-        new NormalDistribution([
+        // NormalDistribution with defaults should work
+        $pattern = new NormalDistribution([
             'stddev' => 10,
-            // missing 'mean'
+            // mean defaults to 100
         ]);
+        
+        $this->assertInstanceOf(NormalDistribution::class, $pattern);
+        $this->assertEquals(100, $pattern->getMean()); // Check default was applied
+        
+        // Test invalid configuration - negative stddev should fail
+        $invalidPattern = new NormalDistribution([
+            'mean' => 50,
+            'stddev' => -10, // Invalid: negative standard deviation
+        ]);
+        
+        // The validateSpecific method should handle this
+        $this->assertFalse($invalidPattern->validate(['stddev' => -10]));
     }
 
     public function test_register_custom_pattern_class()

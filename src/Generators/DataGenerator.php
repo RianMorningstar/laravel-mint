@@ -31,11 +31,12 @@ abstract class DataGenerator
         $this->options = $options;
 
         // Initialize Faker with seed if provided
-        $seed = $this->mint->getConfig('development.seed') ?? null;
+        // Check for seed in options first, then config
+        $seed = $options['seed'] ?? $this->mint->getConfig('development.seed') ?? null;
         $this->faker = FakerFactory::create();
 
         if ($seed !== null) {
-            $this->faker->seed($seed);
+            $this->faker->seed((int)$seed);
         }
     }
 
@@ -92,6 +93,7 @@ abstract class DataGenerator
             'field', 'column_patterns', 'model_patterns', 'use_patterns',
             'with_relationships', 'mode', 'combination', 'weights',
             'performance', 'seed', 'mean', 'stddev', 'scale',
+            'pattern_config', 'lambda', 'min', 'max',
         ];
 
         foreach ($this->options as $key => $value) {

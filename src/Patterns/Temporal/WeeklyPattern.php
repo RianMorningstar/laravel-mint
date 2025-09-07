@@ -210,6 +210,19 @@ class WeeklyPattern extends AbstractPattern implements TemporalInterface
      */
     public function generateForDate(\DateTime $date): mixed
     {
-        return $this->getValueForPeriod($date);
+        // Get base value from config
+        $baseValue = $this->getConfig('base_value', 100);
+        
+        // Get multipliers from config
+        $dayOfWeek = (int) $date->format('w');
+        
+        // Check if it's a weekend (0 = Sunday, 6 = Saturday)
+        if ($dayOfWeek == 0 || $dayOfWeek == 6) {
+            $multiplier = $this->getConfig('weekend_multiplier', 1.5);
+        } else {
+            $multiplier = $this->getConfig('weekday_multiplier', 1.0);
+        }
+        
+        return $baseValue * $multiplier;
     }
 }

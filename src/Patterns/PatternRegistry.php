@@ -20,9 +20,21 @@ class PatternRegistry
 
     public function __construct()
     {
-        $this->registerBuiltInPatterns();
+        // Don't auto-register built-in patterns
+        // They should be registered explicitly if needed
     }
 
+    /**
+     * Initialize with built-in patterns
+     */
+    public function initializeBuiltInPatterns(): void
+    {
+        if (!empty($this->builtInPatterns)) {
+            return; // Already initialized
+        }
+        $this->registerBuiltInPatterns();
+    }
+    
     /**
      * Register built-in patterns
      */
@@ -106,8 +118,22 @@ class PatternRegistry
 
         $pattern = $this->patterns[$patternName];
 
-        // If it's already an instance, return it
+        // If it's already an instance, check if it's a factory wrapper
         if ($pattern instanceof PatternInterface) {
+            // Check if this is a factory wrapper (has a factory property)
+            if (property_exists($pattern, 'factory')) {
+                // It's a factory wrapper, call the factory to get the real pattern
+                $reflection = new \ReflectionClass($pattern);
+                $factoryProp = $reflection->getProperty('factory');
+                $factoryProp->setAccessible(true);
+                $factory = $factoryProp->getValue($pattern);
+                
+                $configProp = $reflection->getProperty('defaultConfig');
+                $configProp->setAccessible(true);
+                $defaultConfig = $configProp->getValue($pattern);
+                
+                return $factory(array_merge($defaultConfig, $config));
+            }
             return $pattern;
         }
 
@@ -120,6 +146,12 @@ class PatternRegistry
      */
     public function get(string $name): PatternInterface
     {
+        $patternName = $this->resolvePattern($name);
+        
+        if (!$patternName) {
+            throw new \InvalidArgumentException("Pattern not found: {$name}");
+        }
+        
         return $this->create($name);
     }
 
@@ -277,24 +309,31 @@ class PatternRegistry
     /**
      * Load patterns from configuration
      */
-    public function loadFromConfig(): void
+    public function loadFromConfig(array $config = []): void
     {
-        // This would load patterns from a configuration file
-        // For now, it's a placeholder that does nothing
-        // since we're already loading built-in patterns in the constructor
+        foreach ($config as $name => $patternConfig) {
+            if (isset($patternConfig['class']) && isset($patternConfig['config'])) {
+                $class = $patternConfig['class'];
+                if (class_exists($class)) {
+                    $this->patterns[$name] = $class;
+                }
+            }
+        }
     }
 
     /**
      * Register a pattern factory
      */
-    public function registerFactory(string $name, callable $factory): void
+    public function registerFactory(string $name, callable $factory, array $defaultConfig = []): void
     {
-        $this->patterns[$name] = new class($factory) implements PatternInterface {
+        $this->patterns[$name] = new class($factory, $defaultConfig) implements PatternInterface {
             private $factory;
+            private $defaultConfig;
             
-            public function __construct(callable $factory)
+            public function __construct(callable $factory, array $defaultConfig = [])
             {
                 $this->factory = $factory;
+                $this->defaultConfig = $defaultConfig;
             }
             
             public function apply(array $data, array $config = []): array
@@ -305,7 +344,7 @@ class PatternRegistry
             
             public function generate(array $context = []): mixed
             {
-                $pattern = ($this->factory)([]);
+                $pattern = ($this->factory)($this->defaultConfig);
                 return $pattern->generate($context);
             }
             

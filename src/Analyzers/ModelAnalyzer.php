@@ -69,11 +69,13 @@ class ModelAnalyzer
             // Fallback to model's getSchemaColumns method (for test models)
             $schemaColumns = $instance->getSchemaColumns();
             foreach ($schemaColumns as $column => $type) {
+                // Get schema details from the actual database if possible
+                $columnDetails = $this->getColumnDetailsDirectly($instance->getTable(), $column);
                 $attributes[$column] = [
                     'type' => $type,
-                    'nullable' => true,
-                    'default' => null,
-                    'unique' => false,
+                    'nullable' => $columnDetails['nullable'] ?? false,
+                    'default' => $columnDetails['default'] ?? null,
+                    'unique' => $columnDetails['unique'] ?? false,
                 ];
             }
         }
@@ -342,18 +344,19 @@ class ModelAnalyzer
 
     protected function getRelationType(string $className): string
     {
+        // Order matters - check longer strings first to avoid false matches
         $map = [
+            'BelongsToMany' => 'belongsToMany',  // Must come before BelongsTo
+            'HasOneThrough' => 'hasOneThrough',  // Must come before HasOne
+            'HasManyThrough' => 'hasManyThrough', // Must come before HasMany
+            'MorphToMany' => 'morphToMany',      // Must come before MorphTo
+            'MorphedByMany' => 'morphedByMany',
             'HasOne' => 'hasOne',
             'HasMany' => 'hasMany',
             'BelongsTo' => 'belongsTo',
-            'BelongsToMany' => 'belongsToMany',
-            'HasOneThrough' => 'hasOneThrough',
-            'HasManyThrough' => 'hasManyThrough',
             'MorphTo' => 'morphTo',
             'MorphOne' => 'morphOne',
             'MorphMany' => 'morphMany',
-            'MorphToMany' => 'morphToMany',
-            'MorphedByMany' => 'morphedByMany',
         ];
 
         foreach ($map as $key => $type) {
@@ -395,6 +398,27 @@ class ModelAnalyzer
         }
     }
 
+    protected function getColumnDetailsDirectly(string $table, string $column): array
+    {
+        try {
+            $connection = $this->mint->getConnection();
+            $schemaInspector = new SchemaInspector($this->mint);
+            $schemaInfo = $schemaInspector->inspectTable($table);
+            
+            if (isset($schemaInfo['columns'][$column])) {
+                return $schemaInfo['columns'][$column];
+            }
+        } catch (\Exception $e) {
+            // Fallback to defaults
+        }
+        
+        return [
+            'nullable' => false,
+            'default' => null,
+            'unique' => false,
+        ];
+    }
+    
     protected function suggestValidationRules(array $attributes): array
     {
         $suggestions = [];

@@ -20,6 +20,14 @@ class SimpleGenerator extends DataGenerator
     public function generate(string $modelClass, int $count, array $options = []): Collection
     {
         $this->options = array_merge($this->options, $options);
+        
+        // Re-seed Faker if seed is provided in options
+        if (isset($options['seed'])) {
+            $this->faker->seed((int)$options['seed']);
+            // Reset the generated count for consistent results
+            $this->generatedCount = 0;
+        }
+        
         $generated = collect();
 
         // Show progress if in CLI
@@ -63,7 +71,7 @@ class SimpleGenerator extends DataGenerator
     {
         $this->generatedCount++;
         $record = [];
-        $modelAnalysis = $this->analysis['model'] ?? [];
+        $modelAnalysis = $this->analysis['model_analysis'] ?? [];
         $schemaAnalysis = $this->analysis['schema'] ?? [];
         $columns = $schemaAnalysis['columns'] ?? [];
 

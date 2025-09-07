@@ -55,7 +55,8 @@ class Mint
         }
 
         return [
-            'model' => $modelAnalysis,
+            'model' => $modelClass,
+            'model_analysis' => $modelAnalysis,
             'schema' => $schemaAnalysis,
             'relationships' => $relationships,
             'table' => $table,
@@ -175,7 +176,9 @@ class Mint
             return $this->app->make(PatternRegistry::class);
         }
 
-        return new PatternRegistry;
+        $registry = new PatternRegistry;
+        $registry->initializeBuiltInPatterns();
+        return $registry;
     }
 
     public function generateWithPattern(string $modelClass, int $count, string $pattern, array $config = []): \Illuminate\Support\Collection

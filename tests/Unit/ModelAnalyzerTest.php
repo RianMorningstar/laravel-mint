@@ -36,6 +36,9 @@ class ModelAnalyzerTest extends TestCase
         $this->analyzer = new ModelAnalyzer($this->mint);
 
         DatabaseSeeder::setupTestDatabase();
+        
+        // Clear all Mint analysis cache to ensure clean state
+        \Illuminate\Support\Facades\Cache::flush();
     }
 
     protected function tearDown(): void
@@ -107,29 +110,58 @@ class ModelAnalyzerTest extends TestCase
 
     public function test_detect_nullable_fields()
     {
+        // Create a model first with TestModelFactory
         $modelClass = TestModelFactory::create('NullableTest', [
             'required_field' => 'string',
             'optional_field' => 'string',
         ]);
+        
+        // Now modify the table structure to make one field nullable and one not
+        Schema::dropIfExists('nullabletests');
+        Schema::create('nullabletests', function ($table) {
+            $table->id();
+            $table->string('required_field');  // NOT NULL by default
+            $table->string('optional_field')->nullable();  // Explicitly nullable
+            $table->timestamps();
+        });
 
-        // Both fields are created as nullable by TestModelFactory
-        // Let's change required_field to NOT NULL
+        // Clear any cache
+        \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
+        
+        // Verify table exists and has columns
         $connection = app('db')->connection();
-        $connection->statement('CREATE TABLE nullabletests_new AS SELECT * FROM nullabletests WHERE 0');
-        $connection->statement('DROP TABLE nullabletests');
-        $connection->statement('CREATE TABLE nullabletests (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            required_field VARCHAR(255) NOT NULL,
-            optional_field VARCHAR(255),
-            created_at DATETIME,
-            updated_at DATETIME
-        )');
+        $this->assertTrue(Schema::hasTable('nullabletests'), 'Table nullabletests should exist');
+        $columnNames = Schema::getColumnListing('nullabletests');
+        $this->assertNotEmpty($columnNames, 'Table should have columns. Got: ' . json_encode($columnNames));
+        
+        // Check if Mint uses the same connection
+        $mint = $this->app->make('LaravelMint\Mint');
+        $mintConnection = $mint->getConnection();
+        $mintColumns = $mintConnection->getSchemaBuilder()->getColumnListing('nullabletests');
+        $this->assertNotEmpty($mintColumns, 'Mint connection should see columns. Got: ' . json_encode($mintColumns));
 
+        // Test directly with SchemaInspector to isolate the issue
+        $inspector = new \LaravelMint\Analyzers\SchemaInspector($this->app->make('LaravelMint\Mint'));
+        $schemaData = $inspector->inspect($modelClass);
+        
+        // Debug: What columns does SchemaInspector see?
+        $this->assertArrayHasKey('columns', $schemaData, 'SchemaData should have columns');
+        $this->assertNotEmpty($schemaData['columns'], 'Columns should not be empty. Got: ' . json_encode(array_keys($schemaData['columns'])));
+        
+        // If this passes, the issue is in ModelAnalyzer, not SchemaInspector
+        $this->assertTrue($schemaData['columns']['optional_field']['nullable'] ?? false,
+            'SchemaInspector should detect optional_field as nullable. Got: ' . json_encode($schemaData['columns']['optional_field'] ?? 'not found'));
+        
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
 
-        $this->assertFalse($attributes['required_field']['nullable'] ?? true);
-        $this->assertTrue($attributes['optional_field']['nullable'] ?? false);
+        $this->assertArrayHasKey('required_field', $attributes, 'required_field should exist in attributes');
+        $this->assertArrayHasKey('optional_field', $attributes, 'optional_field should exist in attributes');
+
+        $this->assertFalse($attributes['required_field']['nullable'] ?? true, 
+            'required_field should not be nullable');
+        $this->assertTrue($attributes['optional_field']['nullable'] ?? false,
+            'optional_field should be nullable. Attributes: ' . json_encode($attributes['optional_field']));
     }
 
     public function test_detect_unique_constraints()
@@ -144,6 +176,9 @@ class ModelAnalyzerTest extends TestCase
             $table->unique('email');
             $table->unique('username');
         });
+
+        // Clear cache after schema change
+        \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
 
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
@@ -164,6 +199,9 @@ class ModelAnalyzerTest extends TestCase
             $table->string('status')->default('active')->change();
             $table->integer('count')->default(0)->change();
         });
+
+        // Clear cache after schema change
+        \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
 
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
@@ -251,6 +289,9 @@ class ModelAnalyzerTest extends TestCase
             $table->index('status');
             $table->index(['status', 'created_at']);
         });
+
+        // Clear cache after schema change
+        \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
 
         $analysis = $this->analyzer->analyze($modelClass);
         $indexes = $analysis['indexes'] ?? [];

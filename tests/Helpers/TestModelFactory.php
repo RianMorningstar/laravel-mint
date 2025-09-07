@@ -9,13 +9,27 @@ use Illuminate\Support\Facades\Schema;
 class TestModelFactory
 {
     protected static array $createdModels = [];
+    
+    protected static int $modelCounter = 0;
 
     /**
      * Create a test model class dynamically
      */
     public static function create(string $modelName, array $attributes = [], array $relationships = []): string
     {
-        $className = "Test{$modelName}Model";
+        // Generate a unique class name to avoid conflicts between tests
+        // Include a counter to ensure uniqueness even for same model/attributes
+        $uniqueSuffix = '';
+        if (!empty($relationships)) {
+            $uniqueSuffix .= '_' . substr(md5(serialize($relationships)), 0, 4);
+        }
+        if (!empty($attributes)) {
+            $uniqueSuffix .= '_' . substr(md5(serialize($attributes)), 0, 4);
+        }
+        // Always add a counter to ensure true uniqueness
+        $uniqueSuffix .= '_' . self::$modelCounter++;
+        
+        $className = "Test{$modelName}Model{$uniqueSuffix}";
         $tableName = strtolower($modelName).'s';
 
         // Use the default connection from the database manager
@@ -73,10 +87,9 @@ class TestModelFactory
             });
         }
 
-        // Create the model class if it doesn't exist
-        if (! class_exists($className)) {
-            $fillableFields = array_keys($attributes);
-            eval("
+        // Create the model class (always create since we use unique names now)
+        $fillableFields = array_keys($attributes);
+        eval("
                 class {$className} extends \Illuminate\Database\Eloquent\Model {
                     protected \$table = '{$tableName}';
                     protected \$guarded = [];
@@ -90,7 +103,6 @@ class TestModelFactory
                     }
                 }
             ');
-        }
 
         self::$createdModels[] = $className;
 

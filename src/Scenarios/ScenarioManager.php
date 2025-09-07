@@ -10,10 +10,12 @@ class ScenarioManager
 
     protected array $scenarios = [];
 
-    public function __construct(Mint $mint)
+    public function __construct(Mint $mint, bool $loadBuiltIn = true)
     {
         $this->mint = $mint;
-        $this->loadScenarios();
+        if ($loadBuiltIn) {
+            $this->loadScenarios();
+        }
     }
 
     /**
@@ -27,6 +29,11 @@ class ScenarioManager
                 'name' => 'Simple',
                 'description' => 'Basic data generation with minimal relationships',
                 'class' => null, // Will use SimpleGenerator directly
+            ],
+            'ecommerce' => [
+                'name' => 'E-commerce',
+                'description' => 'E-commerce scenario with users, products, orders',
+                'class' => 'LaravelMint\\Scenarios\\Library\\EcommerceScenario',
             ],
             'e-commerce' => [
                 'name' => 'E-commerce',
@@ -68,7 +75,7 @@ class ScenarioManager
     /**
      * Run a scenario
      */
-    public function run(string $scenario, array $options = []): void
+    public function run(string $scenario, array $options = []): ?ScenarioResult
     {
         if (! isset($this->scenarios[$scenario])) {
             throw new \InvalidArgumentException("Scenario '{$scenario}' not found");
@@ -79,35 +86,49 @@ class ScenarioManager
         // Handle scenario objects directly
         if (is_object($scenarioConfig)) {
             if ($scenarioConfig instanceof ScenarioInterface) {
-                $scenarioConfig->run($options);
-                return;
+                return $scenarioConfig->run($options);
             }
             throw new \InvalidArgumentException("Invalid scenario object");
+        }
+        
+        // Handle scenario objects stored in 'instance' key
+        if (isset($scenarioConfig['instance']) && $scenarioConfig['instance'] instanceof ScenarioInterface) {
+            return $scenarioConfig['instance']->run($options);
         }
 
         // Handle scenario config arrays
         if (isset($scenarioConfig['class']) && class_exists($scenarioConfig['class'])) {
             $scenarioInstance = new $scenarioConfig['class']($this->mint);
-            $scenarioInstance->run($options);
+            return $scenarioInstance->run($options);
         } else {
             // Default simple scenario
-            $this->runSimpleScenario($options);
+            return $this->runSimpleScenario($options);
         }
     }
 
     /**
      * Run simple scenario
      */
-    protected function runSimpleScenario(array $options): void
+    protected function runSimpleScenario(array $options): ScenarioResult
     {
         // This is a placeholder - in a real implementation,
         // this would analyze all models and generate data in proper order
         $models = $options['models'] ?? [];
         $count = $options['count'] ?? 10;
+        $recordsCreated = 0;
+        $startTime = microtime(true);
 
         foreach ($models as $model) {
             $this->mint->generate($model, $count, $options);
+            $recordsCreated += $count;
         }
+        
+        $duration = microtime(true) - $startTime;
+        
+        return new ScenarioResult(true, [
+            'records_created' => $recordsCreated,
+            'duration' => $duration,
+        ]);
     }
 
     /**

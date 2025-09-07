@@ -71,7 +71,16 @@ class GenerateCommand extends Command
             $patternConfigStrings = [$patternConfigStrings];
         }
         foreach ($patternConfigStrings as $configString) {
-            if (strpos($configString, '=') !== false) {
+            // Handle comma-separated key=value pairs
+            if (strpos($configString, ',') !== false) {
+                $pairs = explode(',', $configString);
+                foreach ($pairs as $pair) {
+                    if (strpos($pair, '=') !== false) {
+                        [$key, $value] = explode('=', $pair, 2);
+                        $patternConfig[trim($key)] = $this->parseValue(trim($value));
+                    }
+                }
+            } elseif (strpos($configString, '=') !== false) {
                 [$key, $value] = explode('=', $configString, 2);
                 $patternConfig[trim($key)] = $this->parseValue(trim($value));
             }
@@ -107,6 +116,9 @@ class GenerateCommand extends Command
             return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error("Failed to generate data: " . $e->getMessage());
+            if (!$this->option('silent')) {
+                $this->error("Stack trace: " . $e->getTraceAsString());
+            }
             return self::FAILURE;
         }
     }

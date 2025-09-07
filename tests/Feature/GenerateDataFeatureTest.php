@@ -77,6 +77,18 @@ class GenerateDataFeatureTest extends TestCase
                 }
             ');
         }
+        
+        // Create Order model
+        if (!class_exists('App\Models\Order')) {
+            eval('
+                namespace App\Models;
+                class Order extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "orders";
+                    protected $fillable = ["user_id", "order_number", "total", "status", "shipping_address", "shipped_at"];
+                    protected $casts = ["shipping_address" => "json"];
+                }
+            ');
+        }
     }
 
     protected function tearDown(): void
@@ -119,12 +131,20 @@ class GenerateDataFeatureTest extends TestCase
     public function test_generate_command_with_pattern()
     {
         // Execute with pattern
-        Artisan::call('mint:generate', [
+        $result = Artisan::call('mint:generate', [
             'model' => 'App\Models\Product',
             'count' => 50,
             '--pattern' => 'normal',
             '--pattern-config' => 'field=price,mean=100,stddev=20',
         ]);
+        
+        // Get output for debugging
+        $output = Artisan::output();
+        
+        // Check if command succeeded
+        if ($result !== 0) {
+            $this->fail("Command failed with output: " . $output);
+        }
 
         // Verify pattern was applied
         $products = DB::table('products')->pluck('price')->toArray();
@@ -158,13 +178,14 @@ class GenerateDataFeatureTest extends TestCase
 
     public function test_generate_command_performance_mode()
     {
-        // Test chunk generation for large datasets
+        // Test performance mode for large datasets
         $startTime = microtime(true);
 
         Artisan::call('mint:generate', [
             'model' => 'App\Models\Order',
             'count' => 1000,
-            '--chunk' => 100,
+            '--performance' => true,
+            '--silent' => true,
         ]);
 
         $duration = microtime(true) - $startTime;

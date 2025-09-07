@@ -47,7 +47,9 @@ class PatternAwareGenerator extends SimpleGenerator
 
             if ($field) {
                 // Apply pattern to specific field
-                $this->columnPatterns[$field] = $this->patternRegistry->create($patternName, $patternConfig);
+                // Remove 'field' from config before passing to pattern
+                $cleanConfig = array_diff_key($patternConfig, ['field' => true]);
+                $this->columnPatterns[$field] = $this->patternRegistry->create($patternName, $cleanConfig);
             } else {
                 // Use as global pattern
                 $this->globalPatterns['default'] = $this->patternRegistry->create($patternName, $patternConfig);

@@ -36,7 +36,7 @@ class ScenarioManagerTest extends TestCase
         $this->mint = $this->app->make(Mint::class);
         $this->builder = new ScenarioBuilder;
         $this->validator = new ScenarioValidator;
-        $this->manager = new ScenarioManager($this->mint);
+        $this->manager = new ScenarioManager($this->mint, false);
     }
 
     protected function tearDown(): void
@@ -347,12 +347,12 @@ class ScenarioManagerTest extends TestCase
                 ];
             }
 
-            protected function beforeRun(): void
+            protected function beforeExecute(): void
             {
                 $this->state['before'] = true;
             }
 
-            protected function afterRun(ScenarioResult $result): void
+            protected function afterExecute(): void
             {
                 $this->state['after'] = true;
             }

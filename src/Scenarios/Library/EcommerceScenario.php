@@ -35,11 +35,6 @@ class EcommerceScenario extends BaseScenario
                 'count' => 200,
                 'relationships' => ['user', 'products'],
             ],
-            [
-                'model' => 'Payment',
-                'count' => 200,
-                'relationships' => ['order', 'user'],
-            ],
         ];
     }
     

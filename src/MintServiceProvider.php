@@ -30,7 +30,9 @@ class MintServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(PatternRegistry::class, function ($app) {
-            return new PatternRegistry;
+            $registry = new PatternRegistry;
+            $registry->initializeBuiltInPatterns();
+            return $registry;
         });
 
         $this->app->singleton(ScenarioRunner::class, function ($app) {
