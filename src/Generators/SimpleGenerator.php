@@ -538,6 +538,7 @@ class SimpleGenerator extends DataGenerator
     protected function isSpecialField(string $column): bool
     {
         $specialFields = [
+            'name',
             'status',
             'state',
             'type',
@@ -549,6 +550,7 @@ class SimpleGenerator extends DataGenerator
             'reference',
             'code',
             'sku',
+            'isbn',
             'slug',
             'uuid',
             'total',
@@ -608,6 +610,25 @@ class SimpleGenerator extends DataGenerator
         // SKU fields
         if ($columnLower === 'sku') {
             return 'SKU-' . $this->faker->unique()->numberBetween(10000, 99999);
+        }
+        
+        // ISBN fields
+        if ($columnLower === 'isbn' || str_contains($columnLower, '_isbn')) {
+            return $this->faker->isbn13();
+        }
+        
+        // Name fields
+        if ($columnLower === 'name' || str_contains($columnLower, '_name')) {
+            // Handle different types of name fields
+            if (str_contains($columnLower, 'first')) {
+                return $this->faker->firstName();
+            } elseif (str_contains($columnLower, 'last')) {
+                return $this->faker->lastName();
+            } elseif (str_contains($columnLower, 'company')) {
+                return $this->faker->company();
+            } else {
+                return $this->faker->name();
+            }
         }
         
         // Email fields

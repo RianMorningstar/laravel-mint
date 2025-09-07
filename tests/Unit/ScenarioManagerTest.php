@@ -4,8 +4,8 @@ namespace LaravelMint\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
 use LaravelMint\Scenarios\BaseScenario;
-use LaravelMint\Scenarios\Presets\EcommerceScenario;
-use LaravelMint\Scenarios\Presets\SaaSScenario;
+use LaravelMint\Scenarios\Library\EcommerceScenario;
+use LaravelMint\Scenarios\Library\SaaSScenario;
 use LaravelMint\Scenarios\ScenarioBuilder;
 use LaravelMint\Scenarios\ScenarioInterface;
 use LaravelMint\Scenarios\ScenarioManager;

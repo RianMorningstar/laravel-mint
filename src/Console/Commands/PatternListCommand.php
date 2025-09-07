@@ -21,7 +21,7 @@ class PatternListCommand extends Command
             ? $registry->getByCategory($category)
             : $registry->all();
         
-        $this->info("Available patterns" . ($category ? " in category '{$category}'" : "") . ":");
+        $this->info("Available Patterns" . ($category ? " in category '{$category}'" : "") . ":");
         
         foreach ($patterns as $name => $class) {
             $this->line(" - {$name}");

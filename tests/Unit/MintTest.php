@@ -176,15 +176,10 @@ class MintTest extends TestCase
     {
         $scenario = Mockery::mock(\LaravelMint\Scenarios\ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
-        $scenario->shouldReceive('run')->once()->andReturn(
-            new \LaravelMint\Scenarios\ScenarioResult(true, [
-                'records_created' => 100,
-            ])
-        );
 
         $manager = Mockery::mock(ScenarioManager::class);
         $manager->shouldReceive('get')->with('test-scenario')->andReturn($scenario);
-        $manager->shouldReceive('run')->with('test-scenario', Mockery::any())->andReturn(
+        $manager->shouldReceive('run')->with('test-scenario', Mockery::any())->once()->andReturn(
             new \LaravelMint\Scenarios\ScenarioResult(true, [
                 'records_created' => 100,
             ])

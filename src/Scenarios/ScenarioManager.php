@@ -76,7 +76,17 @@ class ScenarioManager
 
         $scenarioConfig = $this->scenarios[$scenario];
 
-        if ($scenarioConfig['class'] && class_exists($scenarioConfig['class'])) {
+        // Handle scenario objects directly
+        if (is_object($scenarioConfig)) {
+            if ($scenarioConfig instanceof ScenarioInterface) {
+                $scenarioConfig->run($options);
+                return;
+            }
+            throw new \InvalidArgumentException("Invalid scenario object");
+        }
+
+        // Handle scenario config arrays
+        if (isset($scenarioConfig['class']) && class_exists($scenarioConfig['class'])) {
             $scenarioInstance = new $scenarioConfig['class']($this->mint);
             $scenarioInstance->run($options);
         } else {
@@ -133,6 +143,30 @@ class ScenarioManager
     }
 
     /**
+     * Load scenarios from config
+     */
+    public function loadFromConfig(): void
+    {
+        $config = config('mint.scenarios', []);
+        
+        foreach ($config as $key => $scenarioConfig) {
+            if (!isset($scenarioConfig['enabled']) || !$scenarioConfig['enabled']) {
+                continue;
+            }
+            
+            if (isset($scenarioConfig['class'])) {
+                $class = $scenarioConfig['class'];
+                if (class_exists($class)) {
+                    $instance = new $class();
+                    $this->register($key, $instance);
+                }
+            } else {
+                $this->register($key, $scenarioConfig);
+            }
+        }
+    }
+    
+    /**
      * Check if a scenario exists
      */
     public function has(string $name): bool
@@ -151,6 +185,11 @@ class ScenarioManager
 
         $scenario = $this->scenarios[$name];
         
+        // If it's already a scenario object, return it
+        if (is_object($scenario) && $scenario instanceof ScenarioInterface) {
+            return $scenario;
+        }
+        
         if (isset($scenario['instance'])) {
             return $scenario['instance'];
         }
@@ -167,26 +206,25 @@ class ScenarioManager
      */
     public function list(): array
     {
-        return array_keys($this->scenarios);
-    }
-
-    /**
-     * Load scenarios from configuration
-     */
-    public function loadFromConfig(): void
-    {
-        $configScenarios = $this->mint->getConfig('scenarios', []);
+        $list = [];
         
-        foreach ($configScenarios as $name => $config) {
-            if (isset($config['enabled']) && !$config['enabled']) {
-                continue;
-            }
-            
-            if (isset($config['class']) && class_exists($config['class'])) {
-                // Instantiate the scenario class
-                $scenario = new $config['class']();
-                $this->scenarios[$name] = $scenario;
+        foreach ($this->scenarios as $name => $scenario) {
+            if (is_object($scenario)) {
+                // Handle scenario objects
+                $list[$name] = [
+                    'name' => method_exists($scenario, 'getName') ? $scenario->getName() : $name,
+                    'description' => method_exists($scenario, 'getDescription') ? $scenario->getDescription() : '',
+                ];
+            } else {
+                // Handle scenario config arrays
+                $list[$name] = [
+                    'name' => $scenario['name'] ?? $name,
+                    'description' => $scenario['description'] ?? '',
+                ];
             }
         }
+        
+        return $list;
     }
+
 }
