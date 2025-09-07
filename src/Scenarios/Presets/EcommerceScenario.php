@@ -3,7 +3,6 @@
 namespace LaravelMint\Scenarios\Presets;
 
 use LaravelMint\Scenarios\BaseScenario;
-use LaravelMint\Patterns\PatternRegistry;
 
 class EcommerceScenario extends BaseScenario
 {
@@ -11,13 +10,13 @@ class EcommerceScenario extends BaseScenario
     {
         $this->name = 'E-commerce Store';
         $this->description = 'Generates realistic e-commerce data including users, products, orders, and reviews';
-        
+
         $this->requiredModels = [
             'App\Models\User',
             'App\Models\Product',
             'App\Models\Order',
         ];
-        
+
         $this->optionalModels = [
             'App\Models\Category',
             'App\Models\Cart',
@@ -25,7 +24,7 @@ class EcommerceScenario extends BaseScenario
             'App\Models\Wishlist',
             'App\Models\Coupon',
         ];
-        
+
         $this->parameters = [
             'user_count' => [
                 'type' => 'integer',
@@ -98,33 +97,33 @@ class EcommerceScenario extends BaseScenario
 
         // Step 1: Generate Users with segments
         $this->generateUsers($userCount);
-        
+
         // Step 2: Generate Categories (if model exists)
         if (class_exists('App\Models\Category')) {
             $this->generateCategories();
         }
-        
+
         // Step 3: Generate Products with patterns
         $this->generateProducts($productCount);
-        
+
         // Step 4: Generate Orders with temporal patterns
         $this->generateOrders($orderCount, $timePeriod);
-        
+
         // Step 5: Generate Carts (including abandoned)
         if (class_exists('App\Models\Cart')) {
             $this->generateCarts();
         }
-        
+
         // Step 6: Generate Reviews
         if (class_exists('App\Models\Review')) {
             $this->generateReviews();
         }
-        
+
         // Step 7: Generate Wishlists
         if (class_exists('App\Models\Wishlist')) {
             $this->generateWishlists();
         }
-        
+
         // Step 8: Generate Coupons
         if (class_exists('App\Models\Coupon')) {
             $this->generateCoupons();
@@ -134,9 +133,9 @@ class EcommerceScenario extends BaseScenario
     protected function generateUsers(int $count): void
     {
         $this->logProgress('Generating users with customer segments...');
-        
+
         // Power buyers (20% - Pareto principle)
-        $powerBuyerCount = (int)($count * 0.2);
+        $powerBuyerCount = (int) ($count * 0.2);
         $this->generateModel('App\Models\User', $powerBuyerCount, [
             'segment' => 'power_buyer',
             'column_patterns' => [
@@ -147,12 +146,12 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
             'overrides' => [
-                'email_verified_at' => fn() => now()->subDays(rand(30, 730)),
+                'email_verified_at' => fn () => now()->subDays(rand(30, 730)),
             ],
         ]);
-        
+
         // Regular customers (50%)
-        $regularCount = (int)($count * 0.5);
+        $regularCount = (int) ($count * 0.5);
         $this->generateModel('App\Models\User', $regularCount, [
             'segment' => 'regular',
             'column_patterns' => [
@@ -163,7 +162,7 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
         ]);
-        
+
         // Occasional buyers (30%)
         $occasionalCount = $count - $powerBuyerCount - $regularCount;
         $this->generateModel('App\Models\User', $occasionalCount, [
@@ -176,7 +175,7 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
         ]);
-        
+
         $this->result->addStatistic('user_segments', [
             'power_buyers' => $powerBuyerCount,
             'regular' => $regularCount,
@@ -187,7 +186,7 @@ class EcommerceScenario extends BaseScenario
     protected function generateCategories(): void
     {
         $this->logProgress('Generating product categories...');
-        
+
         $categories = [
             'Electronics' => ['parent' => null, 'slug' => 'electronics'],
             'Clothing' => ['parent' => null, 'slug' => 'clothing'],
@@ -198,7 +197,7 @@ class EcommerceScenario extends BaseScenario
             'Health & Beauty' => ['parent' => null, 'slug' => 'health-beauty'],
             'Food & Grocery' => ['parent' => null, 'slug' => 'food-grocery'],
         ];
-        
+
         foreach ($categories as $name => $data) {
             $model = 'App\Models\Category';
             $model::create([
@@ -209,16 +208,16 @@ class EcommerceScenario extends BaseScenario
                 'is_active' => true,
             ]);
         }
-        
+
         $this->result->addGenerated('App\Models\Category', count($categories));
     }
 
     protected function generateProducts(int $count): void
     {
         $this->logProgress('Generating products with price patterns...');
-        
+
         // Premium products (20%)
-        $premiumCount = (int)($count * 0.2);
+        $premiumCount = (int) ($count * 0.2);
         $this->generateModel('App\Models\Product', $premiumCount, [
             'segment' => 'premium',
             'column_patterns' => [
@@ -234,13 +233,13 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
             'overrides' => [
-                'sku' => fn($i) => 'PRE-' . str_pad($i, 6, '0', STR_PAD_LEFT),
-                'is_featured' => fn() => rand(1, 100) <= 30,
+                'sku' => fn ($i) => 'PRE-'.str_pad($i, 6, '0', STR_PAD_LEFT),
+                'is_featured' => fn () => rand(1, 100) <= 30,
             ],
         ]);
-        
+
         // Regular products (60%)
-        $regularCount = (int)($count * 0.6);
+        $regularCount = (int) ($count * 0.6);
         $this->generateModel('App\Models\Product', $regularCount, [
             'segment' => 'regular',
             'column_patterns' => [
@@ -258,10 +257,10 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
             'overrides' => [
-                'sku' => fn($i) => 'REG-' . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'sku' => fn ($i) => 'REG-'.str_pad($i, 6, '0', STR_PAD_LEFT),
             ],
         ]);
-        
+
         // Budget products (20%)
         $budgetCount = $count - $premiumCount - $regularCount;
         $this->generateModel('App\Models\Product', $budgetCount, [
@@ -280,7 +279,7 @@ class EcommerceScenario extends BaseScenario
                 ],
             ],
             'overrides' => [
-                'sku' => fn($i) => 'BUD-' . str_pad($i, 6, '0', STR_PAD_LEFT),
+                'sku' => fn ($i) => 'BUD-'.str_pad($i, 6, '0', STR_PAD_LEFT),
             ],
         ]);
     }
@@ -288,18 +287,19 @@ class EcommerceScenario extends BaseScenario
     protected function generateOrders(int $count, int $timePeriod): void
     {
         $this->logProgress('Generating orders with temporal patterns...');
-        
+
         $users = \App\Models\User::all();
         $products = \App\Models\Product::all();
-        
+
         if ($users->isEmpty() || $products->isEmpty()) {
             $this->result->addError('No users or products available for orders');
+
             return;
         }
-        
+
         $startDate = now()->subDays($timePeriod);
         $endDate = now();
-        
+
         // Apply seasonal pattern if enabled
         if ($this->getConfig('seasonal_pattern', true)) {
             $options = [
@@ -334,34 +334,34 @@ class EcommerceScenario extends BaseScenario
                 ],
             ];
         }
-        
+
         // Add Black Friday spike if enabled
         if ($this->getConfig('black_friday', true)) {
-            $blackFridayCount = (int)($count * 0.1); // 10% of orders on Black Friday week
+            $blackFridayCount = (int) ($count * 0.1); // 10% of orders on Black Friday week
             $blackFridayDate = $this->getBlackFridayDate($startDate, $endDate);
-            
+
             if ($blackFridayDate) {
                 $this->generateModel('App\Models\Order', $blackFridayCount, [
                     'overrides' => [
-                        'user_id' => fn() => $users->random()->id,
-                        'status' => fn() => fake()->randomElement(['pending', 'processing', 'completed', 'shipped']),
-                        'created_at' => fn() => $blackFridayDate->copy()->addDays(rand(-3, 3)),
-                        'total' => fn() => fake()->randomFloat(2, 50, 500),
+                        'user_id' => fn () => $users->random()->id,
+                        'status' => fn () => fake()->randomElement(['pending', 'processing', 'completed', 'shipped']),
+                        'created_at' => fn () => $blackFridayDate->copy()->addDays(rand(-3, 3)),
+                        'total' => fn () => fake()->randomFloat(2, 50, 500),
                     ],
                 ]);
-                
+
                 $count -= $blackFridayCount;
             }
         }
-        
+
         // Generate regular orders
         $options['overrides'] = [
-            'user_id' => fn() => $this->selectUserBySegment($users),
-            'status' => fn() => $this->generateOrderStatus(),
+            'user_id' => fn () => $this->selectUserBySegment($users),
+            'status' => fn () => $this->generateOrderStatus(),
         ];
-        
+
         $this->generateModel('App\Models\Order', $count, $options);
-        
+
         // Add order statistics
         $this->result->addStatistic('orders_generated', $count);
         $this->result->addStatistic('average_order_value', \App\Models\Order::avg('total'));
@@ -372,36 +372,36 @@ class EcommerceScenario extends BaseScenario
         $abandonmentRate = $this->getConfig('cart_abandonment_rate', 0.3);
         $users = \App\Models\User::all();
         $products = \App\Models\Product::all();
-        
+
         if ($users->isEmpty() || $products->isEmpty()) {
             return;
         }
-        
-        $cartCount = (int)($users->count() * 0.5); // 50% of users have carts
-        $abandonedCount = (int)($cartCount * $abandonmentRate);
-        
+
+        $cartCount = (int) ($users->count() * 0.5); // 50% of users have carts
+        $abandonedCount = (int) ($cartCount * $abandonmentRate);
+
         $this->logProgress("Generating {$cartCount} carts ({$abandonedCount} abandoned)...");
-        
+
         // Generate abandoned carts
         $this->generateModel('App\Models\Cart', $abandonedCount, [
             'overrides' => [
-                'user_id' => fn() => $users->random()->id,
-                'product_id' => fn() => $products->random()->id,
-                'quantity' => fn() => rand(1, 3),
+                'user_id' => fn () => $users->random()->id,
+                'product_id' => fn () => $products->random()->id,
+                'quantity' => fn () => rand(1, 3),
                 'is_abandoned' => true,
-                'created_at' => fn() => now()->subDays(rand(1, 30)),
+                'created_at' => fn () => now()->subDays(rand(1, 30)),
             ],
         ]);
-        
+
         // Generate active carts
         $activeCount = $cartCount - $abandonedCount;
         $this->generateModel('App\Models\Cart', $activeCount, [
             'overrides' => [
-                'user_id' => fn() => $users->random()->id,
-                'product_id' => fn() => $products->random()->id,
-                'quantity' => fn() => rand(1, 5),
+                'user_id' => fn () => $users->random()->id,
+                'product_id' => fn () => $products->random()->id,
+                'quantity' => fn () => rand(1, 5),
                 'is_abandoned' => false,
-                'created_at' => fn() => now()->subDays(rand(0, 7)),
+                'created_at' => fn () => now()->subDays(rand(0, 7)),
             ],
         ]);
     }
@@ -410,16 +410,16 @@ class EcommerceScenario extends BaseScenario
     {
         $reviewRate = $this->getConfig('review_rate', 0.15);
         $orders = \App\Models\Order::where('status', 'completed')->get();
-        
+
         if ($orders->isEmpty()) {
             return;
         }
-        
-        $reviewCount = (int)($orders->count() * $reviewRate);
+
+        $reviewCount = (int) ($orders->count() * $reviewRate);
         $this->logProgress("Generating {$reviewCount} reviews...");
-        
+
         $reviewedOrders = $orders->random(min($reviewCount, $orders->count()));
-        
+
         foreach ($reviewedOrders as $order) {
             \App\Models\Review::create([
                 'user_id' => $order->user_id,
@@ -432,7 +432,7 @@ class EcommerceScenario extends BaseScenario
                 'created_at' => $order->created_at->addDays(rand(3, 14)),
             ]);
         }
-        
+
         $this->result->addGenerated('App\Models\Review', $reviewCount);
     }
 
@@ -440,16 +440,16 @@ class EcommerceScenario extends BaseScenario
     {
         $users = \App\Models\User::limit(100)->get(); // Top 100 users
         $products = \App\Models\Product::all();
-        
+
         if ($users->isEmpty() || $products->isEmpty()) {
             return;
         }
-        
+
         $this->logProgress('Generating wishlists...');
-        
+
         foreach ($users as $user) {
             $wishlistCount = rand(0, 10);
-            
+
             for ($i = 0; $i < $wishlistCount; $i++) {
                 \App\Models\Wishlist::create([
                     'user_id' => $user->id,
@@ -458,14 +458,14 @@ class EcommerceScenario extends BaseScenario
                 ]);
             }
         }
-        
+
         $this->result->addGenerated('App\Models\Wishlist', \App\Models\Wishlist::count());
     }
 
     protected function generateCoupons(): void
     {
         $this->logProgress('Generating coupons...');
-        
+
         $coupons = [
             ['code' => 'WELCOME10', 'discount' => 10, 'type' => 'percentage'],
             ['code' => 'SAVE20', 'discount' => 20, 'type' => 'fixed'],
@@ -473,7 +473,7 @@ class EcommerceScenario extends BaseScenario
             ['code' => 'BLACKFRIDAY', 'discount' => 30, 'type' => 'percentage'],
             ['code' => 'CYBER50', 'discount' => 50, 'type' => 'percentage'],
         ];
-        
+
         foreach ($coupons as $coupon) {
             \App\Models\Coupon::create([
                 'code' => $coupon['code'],
@@ -486,7 +486,7 @@ class EcommerceScenario extends BaseScenario
                 'is_active' => true,
             ]);
         }
-        
+
         $this->result->addGenerated('App\Models\Coupon', count($coupons));
     }
 
@@ -495,18 +495,19 @@ class EcommerceScenario extends BaseScenario
         // 80% of orders from 20% of users (power buyers)
         if (rand(1, 100) <= 80) {
             // Select from top 20% of users
-            $powerBuyers = $users->take((int)($users->count() * 0.2));
+            $powerBuyers = $users->take((int) ($users->count() * 0.2));
+
             return $powerBuyers->random()->id;
         }
-        
+
         return $users->random()->id;
     }
 
     protected function generateOrderStatus(): string
     {
         $rand = rand(1, 100);
-        
-        return match(true) {
+
+        return match (true) {
             $rand <= 60 => 'completed',
             $rand <= 75 => 'shipped',
             $rand <= 85 => 'processing',
@@ -518,8 +519,8 @@ class EcommerceScenario extends BaseScenario
     protected function generateRating(): int
     {
         $rand = rand(1, 100);
-        
-        return match(true) {
+
+        return match (true) {
             $rand <= 5 => 1,   // 5% - 1 star
             $rand <= 10 => 2,  // 5% - 2 stars
             $rand <= 25 => 3,  // 15% - 3 stars
@@ -531,16 +532,16 @@ class EcommerceScenario extends BaseScenario
     protected function getBlackFridayDate($startDate, $endDate): ?\DateTime
     {
         $year = $startDate->year;
-        
+
         // Black Friday is the day after Thanksgiving (4th Thursday of November)
         $november = new \DateTime("$year-11-01");
         $thanksgiving = new \DateTime("fourth thursday of november $year");
         $blackFriday = $thanksgiving->modify('+1 day');
-        
+
         if ($blackFriday >= $startDate && $blackFriday <= $endDate) {
             return $blackFriday;
         }
-        
+
         return null;
     }
 

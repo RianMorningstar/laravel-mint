@@ -7,16 +7,17 @@ use LaravelMint\Patterns\AbstractPattern;
 class PoissonDistribution extends AbstractPattern implements DistributionInterface
 {
     protected float $lambda; // Rate parameter (average number of events)
+
     protected ?int $max;
 
     protected function initialize(): void
     {
         $this->name = 'Poisson Distribution';
         $this->description = 'Generates values following a Poisson distribution (event frequency)';
-        
+
         $this->lambda = $this->getConfig('lambda', 1);
         $this->max = $this->getConfig('max');
-        
+
         $this->parameters = [
             'lambda' => [
                 'type' => 'float',
@@ -43,28 +44,28 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
             $L = exp(-$this->lambda);
             $k = 0;
             $p = 1.0;
-            
+
             do {
                 $k++;
                 $p *= $this->faker->randomFloat(6, 0.000001, 0.999999);
             } while ($p > $L && $k < 1000); // Safety limit
-            
+
             $value = $k - 1;
         } else {
             // For large lambda, use normal approximation
             $normal = new NormalDistribution([
                 'mean' => $this->lambda,
                 'stddev' => sqrt($this->lambda),
-                'min' => 0
+                'min' => 0,
             ]);
             $value = round($normal->generate());
         }
-        
+
         // Apply truncation if specified
         if ($this->max !== null) {
             $value = min($value, $this->max);
         }
-        
+
         return (int) $value;
     }
 
@@ -77,6 +78,7 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
         for ($i = 0; $i < $count; $i++) {
             $samples[] = $this->generate();
         }
+
         return $samples;
     }
 
@@ -112,8 +114,9 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
         if ($x < 0 || floor($x) != $x) {
             return 0;
         }
-        
+
         $k = (int) $x;
+
         return (pow($this->lambda, $k) * exp(-$this->lambda)) / $this->factorial($k);
     }
 
@@ -125,14 +128,14 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
         if ($x < 0) {
             return 0;
         }
-        
+
         $sum = 0;
         $k = floor($x);
-        
+
         for ($i = 0; $i <= $k; $i++) {
             $sum += $this->pdf($i);
         }
-        
+
         return $sum;
     }
 
@@ -142,22 +145,23 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
     protected function factorial(int $n): float
     {
         static $cache = [0 => 1, 1 => 1];
-        
+
         if (isset($cache[$n])) {
             return $cache[$n];
         }
-        
+
         if ($n > 170) {
             // Factorial becomes too large, use Stirling's approximation
             return sqrt(2 * pi() * $n) * pow($n / exp(1), $n);
         }
-        
+
         $result = 1;
         for ($i = 2; $i <= $n; $i++) {
             $result *= $i;
         }
-        
+
         $cache[$n] = $result;
+
         return $result;
     }
 
@@ -169,11 +173,11 @@ class PoissonDistribution extends AbstractPattern implements DistributionInterfa
         if (isset($config['lambda']) && $config['lambda'] <= 0) {
             return false;
         }
-        
+
         if (isset($config['max']) && $config['max'] < 0) {
             return false;
         }
-        
+
         return true;
     }
 }

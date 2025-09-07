@@ -23,16 +23,17 @@ class ExportCommand extends Command
     {
         $format = $this->argument('format');
         $models = $this->option('model');
-        
-        if (empty($models) && !$this->option('template')) {
+
+        if (empty($models) && ! $this->option('template')) {
             $this->error('Please specify at least one model to export or use a template');
+
             return 1;
         }
-        
+
         $this->info("Exporting to {$format} format...");
-        
-        $manager = new ExportManager();
-        
+
+        $manager = new ExportManager;
+
         // Load template if specified
         if ($template = $this->option('template')) {
             try {
@@ -40,16 +41,18 @@ class ExportCommand extends Command
                 $this->info("Using template: {$template}");
             } catch (\Exception $e) {
                 $this->error("Failed to load template: {$e->getMessage()}");
+
                 return 1;
             }
         } else {
             // Configure models
             foreach ($models as $model) {
-                if (!class_exists($model)) {
+                if (! class_exists($model)) {
                     $this->error("Model not found: {$model}");
+
                     return 1;
                 }
-                
+
                 // Parse fields
                 $fields = null;
                 foreach ($this->option('fields') as $fieldSpec) {
@@ -61,9 +64,9 @@ class ExportCommand extends Command
                         }
                     }
                 }
-                
+
                 $manager->model($model, $fields);
-                
+
                 // Parse conditions
                 foreach ($this->option('where') as $condition) {
                     $parts = explode(':', $condition);
@@ -71,40 +74,40 @@ class ExportCommand extends Command
                         $column = $parts[1];
                         $operator = $parts[2];
                         $value = $parts[3] ?? null;
-                        
+
                         if ($value === null) {
                             $value = $operator;
                             $operator = '=';
                         }
-                        
+
                         $manager->where($model, $column, $operator, $value);
                     }
                 }
             }
         }
-        
+
         // Configure options
-        $manager->chunkSize((int)$this->option('chunk-size'));
-        
+        $manager->chunkSize((int) $this->option('chunk-size'));
+
         if ($this->option('compress')) {
             $manager->compress();
         }
-        
+
         // Show progress
         $this->info('Starting export...');
         $bar = $this->output->createProgressBar();
-        
+
         try {
             $outputPath = $this->option('output');
             $result = $manager->export($format, $outputPath);
-            
+
             $bar->finish();
             $this->newLine(2);
-            
+
             // Display results
             if ($result->isSuccess()) {
                 $this->info('✓ Export completed successfully');
-                
+
                 $data = $result->toArray();
                 $this->table(
                     ['Metric', 'Value'],
@@ -116,8 +119,8 @@ class ExportCommand extends Command
                         ['Execution Time', $data['execution_time']],
                     ]
                 );
-                
-                if (!empty($data['exported'])) {
+
+                if (! empty($data['exported'])) {
                     $this->newLine();
                     $this->info('Exported by model:');
                     foreach ($data['exported'] as $model => $count) {
@@ -125,30 +128,30 @@ class ExportCommand extends Command
                         $this->line("  • {$modelName}: {$count}");
                     }
                 }
-                
+
                 $this->newLine();
-                $this->info('File saved to: ' . $data['output_path']);
+                $this->info('File saved to: '.$data['output_path']);
             } else {
                 $this->error('✗ Export failed');
-                
+
                 $data = $result->toArray();
-                if (!empty($data['errors'])) {
+                if (! empty($data['errors'])) {
                     foreach ($data['errors'] as $error) {
                         $this->error($error);
                     }
                 }
             }
-            
+
             return $result->isSuccess() ? 0 : 1;
         } catch (\Exception $e) {
             $bar->finish();
             $this->newLine(2);
-            $this->error('Export failed: ' . $e->getMessage());
-            
+            $this->error('Export failed: '.$e->getMessage());
+
             if ($this->option('verbose')) {
                 $this->error($e->getTraceAsString());
             }
-            
+
             return 1;
         }
     }

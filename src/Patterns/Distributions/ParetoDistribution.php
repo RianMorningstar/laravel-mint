@@ -7,18 +7,20 @@ use LaravelMint\Patterns\AbstractPattern;
 class ParetoDistribution extends AbstractPattern implements DistributionInterface
 {
     protected float $alpha; // Shape parameter
+
     protected float $xmin;   // Scale parameter (minimum value)
+
     protected ?float $max;
 
     protected function initialize(): void
     {
         $this->name = 'Pareto Distribution';
         $this->description = 'Generates values following a Pareto distribution (80/20 rule, power law)';
-        
+
         $this->alpha = $this->getConfig('alpha', 1.16); // Default gives ~80/20 distribution
         $this->xmin = $this->getConfig('xmin', 1);
         $this->max = $this->getConfig('max');
-        
+
         $this->parameters = [
             'alpha' => [
                 'type' => 'float',
@@ -49,7 +51,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         // Inverse transform sampling for Pareto distribution
         $u = $this->faker->randomFloat(6, 0.000001, 0.999999);
         $value = $this->xmin / pow($u, 1 / $this->alpha);
-        
+
         // Apply truncation if specified
         return $this->clamp($value, $this->xmin, $this->max);
     }
@@ -63,6 +65,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         for ($i = 0; $i < $count; $i++) {
             $samples[] = $this->generate();
         }
+
         return $samples;
     }
 
@@ -74,7 +77,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if ($this->alpha <= 1) {
             return INF; // Mean is infinite for alpha <= 1
         }
-        
+
         return ($this->alpha * $this->xmin) / ($this->alpha - 1);
     }
 
@@ -86,8 +89,9 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if ($this->alpha <= 2) {
             return INF; // Variance is infinite for alpha <= 2
         }
-        
+
         $mean = $this->getMean();
+
         return (pow($this->xmin, 2) * $this->alpha) / (pow($this->alpha - 1, 2) * ($this->alpha - 2));
     }
 
@@ -97,6 +101,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
     public function getStandardDeviation(): float
     {
         $variance = $this->getVariance();
+
         return is_infinite($variance) ? INF : sqrt($variance);
     }
 
@@ -108,7 +113,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if ($x < $this->xmin) {
             return 0;
         }
-        
+
         return ($this->alpha * pow($this->xmin, $this->alpha)) / pow($x, $this->alpha + 1);
     }
 
@@ -120,7 +125,7 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if ($x < $this->xmin) {
             return 0;
         }
-        
+
         return 1 - pow($this->xmin / $x, $this->alpha);
     }
 
@@ -134,12 +139,12 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if ($percentile <= 0 || $percentile >= 1) {
             throw new \InvalidArgumentException('Percentile must be between 0 and 1');
         }
-        
+
         if ($this->alpha <= 1) {
             // For alpha <= 1, use approximation
-            return 1 - pow($percentile, 1 - 1/$this->alpha);
+            return 1 - pow($percentile, 1 - 1 / $this->alpha);
         }
-        
+
         return 1 - pow($percentile, ($this->alpha - 1) / $this->alpha);
     }
 
@@ -151,15 +156,15 @@ class ParetoDistribution extends AbstractPattern implements DistributionInterfac
         if (isset($config['alpha']) && $config['alpha'] <= 0) {
             return false;
         }
-        
+
         if (isset($config['xmin']) && $config['xmin'] <= 0) {
             return false;
         }
-        
+
         if (isset($config['max']) && isset($config['xmin']) && $config['max'] <= $config['xmin']) {
             return false;
         }
-        
+
         return true;
     }
 }

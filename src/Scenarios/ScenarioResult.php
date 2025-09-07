@@ -5,11 +5,17 @@ namespace LaravelMint\Scenarios;
 class ScenarioResult
 {
     protected string $scenario;
+
     protected array $generated = [];
+
     protected array $statistics = [];
+
     protected array $errors = [];
+
     protected float $executionTime = 0;
+
     protected int $memoryUsage = 0;
+
     protected bool $success = true;
 
     public function __construct(string $scenario)
@@ -85,7 +91,7 @@ class ScenarioResult
             'success' => $this->success,
             'generated' => $this->generated,
             'total_records' => $this->getTotalGenerated(),
-            'execution_time' => round($this->executionTime, 2) . 's',
+            'execution_time' => round($this->executionTime, 2).'s',
             'memory_usage' => $this->formatBytes($this->memoryUsage),
             'statistics' => $this->statistics,
             'errors' => $this->errors,
@@ -96,13 +102,13 @@ class ScenarioResult
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
-        
+
         while ($bytes >= 1024 && $i < count($units) - 1) {
             $bytes /= 1024;
             $i++;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function toArray(): array

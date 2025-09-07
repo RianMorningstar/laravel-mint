@@ -5,8 +5,9 @@ namespace LaravelMint\Scenarios;
 class ScenarioValidator
 {
     protected array $errors = [];
+
     protected array $warnings = [];
-    
+
     /**
      * Validate a scenario
      */
@@ -17,21 +18,21 @@ class ScenarioValidator
 
         // Check scenario basics
         $this->validateBasics($scenario);
-        
+
         // Check required models
         $this->validateRequiredModels($scenario);
-        
+
         // Check parameters
         $this->validateParameters($scenario, $options);
-        
+
         // Check dependencies
         $this->validateDependencies($scenario);
-        
+
         // Check database state
         $this->validateDatabaseState($scenario);
-        
+
         // Run scenario's own validation
-        if (!$scenario->validate()) {
+        if (! $scenario->validate()) {
             foreach ($scenario->getValidationErrors() as $error) {
                 $this->errors[] = $error;
             }
@@ -60,26 +61,27 @@ class ScenarioValidator
     protected function validateRequiredModels(ScenarioInterface $scenario): void
     {
         foreach ($scenario->getRequiredModels() as $model) {
-            if (!class_exists($model)) {
+            if (! class_exists($model)) {
                 $this->errors[] = "Required model does not exist: {$model}";
+
                 continue;
             }
 
             // Check if model extends Eloquent
-            if (!is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
+            if (! is_subclass_of($model, 'Illuminate\Database\Eloquent\Model')) {
                 $this->errors[] = "Model is not an Eloquent model: {$model}";
             }
 
             // Check if table exists
             try {
-                $instance = new $model();
+                $instance = new $model;
                 $table = $instance->getTable();
-                
-                if (!\Illuminate\Support\Facades\Schema::hasTable($table)) {
+
+                if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
                     $this->errors[] = "Table does not exist for model {$model}: {$table}";
                 }
             } catch (\Exception $e) {
-                $this->errors[] = "Cannot instantiate model {$model}: " . $e->getMessage();
+                $this->errors[] = "Cannot instantiate model {$model}: ".$e->getMessage();
             }
         }
     }
@@ -90,18 +92,19 @@ class ScenarioValidator
     protected function validateParameters(ScenarioInterface $scenario, array $options): void
     {
         $parameters = $scenario->getParameters();
-        
+
         foreach ($parameters as $param => $rules) {
             // Check required parameters
             if (isset($rules['required']) && $rules['required']) {
-                if (!isset($options[$param])) {
+                if (! isset($options[$param])) {
                     $this->errors[] = "Required parameter missing: {$param}";
+
                     continue;
                 }
             }
 
             // Skip if parameter not provided
-            if (!isset($options[$param])) {
+            if (! isset($options[$param])) {
                 continue;
             }
 
@@ -109,7 +112,7 @@ class ScenarioValidator
 
             // Validate type
             if (isset($rules['type'])) {
-                if (!$this->validateType($value, $rules['type'])) {
+                if (! $this->validateType($value, $rules['type'])) {
                     $this->errors[] = "Parameter {$param} must be of type {$rules['type']}";
                 }
             }
@@ -124,8 +127,8 @@ class ScenarioValidator
             }
 
             // Validate enum
-            if (isset($rules['enum']) && !in_array($value, $rules['enum'])) {
-                $this->errors[] = "Parameter {$param} must be one of: " . implode(', ', $rules['enum']);
+            if (isset($rules['enum']) && ! in_array($value, $rules['enum'])) {
+                $this->errors[] = "Parameter {$param} must be one of: ".implode(', ', $rules['enum']);
             }
 
             // Custom validation
@@ -143,7 +146,7 @@ class ScenarioValidator
      */
     protected function validateType($value, string $type): bool
     {
-        return match($type) {
+        return match ($type) {
             'int', 'integer' => is_int($value),
             'float', 'double' => is_numeric($value),
             'string' => is_string($value),
@@ -162,29 +165,29 @@ class ScenarioValidator
     {
         // Check for circular dependencies in relationships
         $models = $scenario->getRequiredModels();
-        
+
         foreach ($models as $model) {
-            if (!class_exists($model)) {
+            if (! class_exists($model)) {
                 continue;
             }
 
             try {
-                $instance = new $model();
+                $instance = new $model;
                 $reflection = new \ReflectionClass($instance);
-                
+
                 // Check for required relationships
                 foreach ($reflection->getMethods() as $method) {
                     if ($this->isRelationMethod($method)) {
                         $relationName = $method->getName();
-                        
+
                         // Try to get related model
                         try {
                             $relation = $instance->$relationName();
                             $relatedModel = get_class($relation->getRelated());
-                            
+
                             // Check if related model is in required models
-                            if (!in_array($relatedModel, $models) && 
-                                !in_array($relatedModel, $scenario->getOptionalModels())) {
+                            if (! in_array($relatedModel, $models) &&
+                                ! in_array($relatedModel, $scenario->getOptionalModels())) {
                                 $this->warnings[] = "Model {$model} has relation to {$relatedModel} which is not included in scenario";
                             }
                         } catch (\Exception $e) {
@@ -193,7 +196,7 @@ class ScenarioValidator
                     }
                 }
             } catch (\Exception $e) {
-                $this->warnings[] = "Cannot analyze model {$model}: " . $e->getMessage();
+                $this->warnings[] = "Cannot analyze model {$model}: ".$e->getMessage();
             }
         }
     }
@@ -203,17 +206,17 @@ class ScenarioValidator
      */
     protected function isRelationMethod(\ReflectionMethod $method): bool
     {
-        if (!$method->isPublic() || $method->isStatic() || $method->getNumberOfRequiredParameters() > 0) {
+        if (! $method->isPublic() || $method->isStatic() || $method->getNumberOfRequiredParameters() > 0) {
             return false;
         }
 
         $returnType = $method->getReturnType();
-        if (!$returnType) {
+        if (! $returnType) {
             return false;
         }
 
         $typeName = $returnType->getName();
-        
+
         $relationTypes = [
             'Illuminate\Database\Eloquent\Relations\HasOne',
             'Illuminate\Database\Eloquent\Relations\HasMany',
@@ -245,13 +248,14 @@ class ScenarioValidator
         try {
             \Illuminate\Support\Facades\DB::connection()->getPdo();
         } catch (\Exception $e) {
-            $this->errors[] = 'Database connection failed: ' . $e->getMessage();
+            $this->errors[] = 'Database connection failed: '.$e->getMessage();
+
             return;
         }
 
         // Check for existing data that might conflict
         foreach ($scenario->getRequiredModels() as $model) {
-            if (!class_exists($model)) {
+            if (! class_exists($model)) {
                 continue;
             }
 
@@ -261,16 +265,16 @@ class ScenarioValidator
                     $this->warnings[] = "Model {$model} already has {$count} records";
                 }
             } catch (\Exception $e) {
-                $this->warnings[] = "Cannot count records for {$model}: " . $e->getMessage();
+                $this->warnings[] = "Cannot count records for {$model}: ".$e->getMessage();
             }
         }
 
         // Check available disk space
         $freeSpace = disk_free_space(storage_path());
         $requiredSpace = 100 * 1024 * 1024; // 100MB minimum
-        
+
         if ($freeSpace < $requiredSpace) {
-            $this->warnings[] = 'Low disk space available: ' . $this->formatBytes($freeSpace);
+            $this->warnings[] = 'Low disk space available: '.$this->formatBytes($freeSpace);
         }
 
         // Check memory limit
@@ -290,7 +294,7 @@ class ScenarioValidator
     {
         $value = trim($value);
         $last = strtolower($value[strlen($value) - 1]);
-        $value = (int)$value;
+        $value = (int) $value;
 
         switch ($last) {
             case 'g':
@@ -311,13 +315,13 @@ class ScenarioValidator
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
-        
+
         while ($bytes >= 1024 && $i < count($units) - 1) {
             $bytes /= 1024;
             $i++;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 }
 
@@ -327,6 +331,7 @@ class ScenarioValidator
 class ValidationResult
 {
     protected array $errors;
+
     protected array $warnings;
 
     public function __construct(array $errors = [], array $warnings = [])
@@ -342,7 +347,7 @@ class ValidationResult
 
     public function hasWarnings(): bool
     {
-        return !empty($this->warnings);
+        return ! empty($this->warnings);
     }
 
     public function getErrors(): array

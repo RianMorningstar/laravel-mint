@@ -2,8 +2,8 @@
 
 namespace LaravelMint\Tests\Unit;
 
-use LaravelMint\Tests\TestCase;
 use LaravelMint\Mint;
+use LaravelMint\Tests\TestCase;
 
 class MintServiceProviderTest extends TestCase
 {
@@ -20,7 +20,7 @@ class MintServiceProviderTest extends TestCase
     public function test_config_is_loaded()
     {
         $config = $this->app['config']->get('mint');
-        
+
         $this->assertIsArray($config);
         $this->assertArrayHasKey('generation', $config);
         $this->assertArrayHasKey('patterns', $config);

@@ -3,7 +3,6 @@
 namespace LaravelMint\Commands;
 
 use Illuminate\Console\Command;
-use LaravelMint\Facades\Mint;
 
 class ImportCommand extends Command
 {
@@ -36,11 +35,11 @@ class ImportCommand extends Command
         $anonymize = $this->option('anonymize');
         $limit = $this->option('limit');
         $preserveIds = $this->option('preserve-ids');
-        
+
         $this->info('Production data import functionality');
         $this->info('====================================');
         $this->newLine();
-        
+
         $this->warn('⚠️  This feature is planned for Phase 4 of development');
         $this->info('It will include:');
         $this->line('  • Safe production data import');
@@ -49,24 +48,24 @@ class ImportCommand extends Command
         $this->line('  • Relationship maintenance');
         $this->line('  • Compliance profiles (GDPR, HIPAA, PCI)');
         $this->newLine();
-        
+
         $this->info('Current command options:');
         $this->line("  Source: {$source}");
-        $this->line("  Anonymize: " . ($anonymize ? 'Yes' : 'No'));
-        
-        if (!empty($models)) {
-            $this->line("  Models: " . implode(', ', $models));
+        $this->line('  Anonymize: '.($anonymize ? 'Yes' : 'No'));
+
+        if (! empty($models)) {
+            $this->line('  Models: '.implode(', ', $models));
         }
-        
+
         if ($limit) {
             $this->line("  Limit: {$limit} records per model");
         }
-        
-        $this->line("  Preserve IDs: " . ($preserveIds ? 'Yes' : 'No'));
-        
+
+        $this->line('  Preserve IDs: '.($preserveIds ? 'Yes' : 'No'));
+
         $this->newLine();
         $this->info('This feature will be available in a future release.');
-        
+
         return 0;
     }
 }

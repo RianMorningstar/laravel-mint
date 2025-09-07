@@ -7,30 +7,35 @@ use LaravelMint\Patterns\AbstractPattern;
 class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
 {
     protected float $initialValue;
+
     protected float $growthRate;
+
     protected ?float $min;
+
     protected ?float $max;
+
     protected ?\DateTimeInterface $baseTime = null;
+
     protected string $timeUnit = 'day';
 
     protected function initialize(): void
     {
         $this->name = 'Linear Growth';
         $this->description = 'Generates values with linear growth over time';
-        
+
         $this->initialValue = $this->getConfig('initial_value', 100);
         $this->growthRate = $this->getConfig('growth_rate', 1);
         $this->timeUnit = $this->getConfig('time_unit', 'day');
         $this->min = $this->getConfig('min');
         $this->max = $this->getConfig('max');
-        
+
         $baseTimeStr = $this->getConfig('base_time');
         if ($baseTimeStr) {
             $this->baseTime = new \DateTime($baseTimeStr);
         } else {
-            $this->baseTime = new \DateTime();
+            $this->baseTime = new \DateTime;
         }
-        
+
         $this->parameters = [
             'initial_value' => [
                 'type' => 'float',
@@ -64,7 +69,8 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
      */
     public function generate(array $context = []): mixed
     {
-        $timestamp = $context['timestamp'] ?? new \DateTime();
+        $timestamp = $context['timestamp'] ?? new \DateTime;
+
         return $this->generateAt($timestamp);
     }
 
@@ -73,17 +79,17 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
      */
     public function generateAt(\DateTimeInterface $timestamp): mixed
     {
-        if (!$this->baseTime) {
-            $this->baseTime = new \DateTime();
+        if (! $this->baseTime) {
+            $this->baseTime = new \DateTime;
         }
-        
+
         $timeDiff = $this->getTimeDifference($this->baseTime, $timestamp);
         $value = $this->initialValue + ($this->growthRate * $timeDiff);
-        
+
         // Add some random variation (±5%)
         $variation = $this->faker->randomFloat(2, 0.95, 1.05);
         $value *= $variation;
-        
+
         return $this->clamp($value, $this->min, $this->max);
     }
 
@@ -95,7 +101,7 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
         $series = [];
         $current = clone $start;
         $intervalObj = \DateInterval::createFromDateString($interval);
-        
+
         while ($current <= $end) {
             $series[] = [
                 'timestamp' => clone $current,
@@ -103,7 +109,7 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
             ];
             $current->add($intervalObj);
         }
-        
+
         return $series;
     }
 
@@ -113,7 +119,7 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
     protected function getTimeDifference(\DateTimeInterface $start, \DateTimeInterface $end): float
     {
         $diff = $end->getTimestamp() - $start->getTimestamp();
-        
+
         switch ($this->timeUnit) {
             case 'second':
                 return $diff;
@@ -156,15 +162,15 @@ class LinearGrowth extends AbstractPattern implements TemporalPatternInterface
     protected function validateSpecific(array $config): bool
     {
         $validTimeUnits = ['second', 'minute', 'hour', 'day', 'week', 'month', 'year'];
-        
-        if (isset($config['time_unit']) && !in_array($config['time_unit'], $validTimeUnits)) {
+
+        if (isset($config['time_unit']) && ! in_array($config['time_unit'], $validTimeUnits)) {
             return false;
         }
-        
+
         if (isset($config['min']) && isset($config['max']) && $config['min'] >= $config['max']) {
             return false;
         }
-        
+
         return true;
     }
 }

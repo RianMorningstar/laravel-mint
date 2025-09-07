@@ -3,13 +3,11 @@
 namespace LaravelMint\Analyzers;
 
 use LaravelMint\Mint;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 
 class SchemaInspector
 {
     protected Mint $mint;
+
     protected array $cache = [];
 
     public function __construct(Mint $mint)
@@ -19,7 +17,7 @@ class SchemaInspector
 
     public function inspect(string $modelClass): array
     {
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
         }
 
@@ -56,10 +54,10 @@ class SchemaInspector
     {
         $schemaBuilder = $connection->getSchemaBuilder();
         $driverName = $connection->getDriverName();
-        
+
         // Get basic column type
         $columnType = $schemaBuilder->getColumnType($table, $column);
-        
+
         // Get detailed information based on database driver
         $details = [
             'type' => $columnType,
@@ -92,8 +90,8 @@ class SchemaInspector
     protected function getMySQLColumnDetails(string $table, string $column, $connection): array
     {
         $database = $connection->getDatabaseName();
-        
-        $result = $connection->selectOne("
+
+        $result = $connection->selectOne('
             SELECT 
                 COLUMN_TYPE as column_type,
                 IS_NULLABLE as is_nullable,
@@ -107,9 +105,9 @@ class SchemaInspector
             WHERE TABLE_SCHEMA = ? 
                 AND TABLE_NAME = ? 
                 AND COLUMN_NAME = ?
-        ", [$database, $table, $column]);
+        ', [$database, $table, $column]);
 
-        if (!$result) {
+        if (! $result) {
             return [];
         }
 
@@ -128,7 +126,7 @@ class SchemaInspector
 
     protected function getPostgreSQLColumnDetails(string $table, string $column, $connection): array
     {
-        $result = $connection->selectOne("
+        $result = $connection->selectOne('
             SELECT 
                 pg_catalog.format_type(a.atttypid, a.atttypmod) as data_type,
                 a.attnotnull as not_null,
@@ -141,14 +139,14 @@ class SchemaInspector
                 AND a.attname = ?
                 AND a.attnum > 0 
                 AND NOT a.attisdropped
-        ", [$table, $column]);
+        ', [$table, $column]);
 
-        if (!$result) {
+        if (! $result) {
             return [];
         }
 
         return [
-            'nullable' => !$result->not_null,
+            'nullable' => ! $result->not_null,
             'default' => $result->default_value,
             'comment' => $result->comment,
             'full_type' => $result->data_type,
@@ -158,11 +156,11 @@ class SchemaInspector
     protected function getSQLiteColumnDetails(string $table, string $column, $connection): array
     {
         $tableInfo = $connection->select("PRAGMA table_info({$table})");
-        
+
         foreach ($tableInfo as $columnInfo) {
             if ($columnInfo->name === $column) {
                 return [
-                    'nullable' => !$columnInfo->notnull,
+                    'nullable' => ! $columnInfo->notnull,
                     'default' => $columnInfo->dflt_value,
                     'primary' => (bool) $columnInfo->pk,
                     'full_type' => $columnInfo->type,
@@ -185,18 +183,18 @@ class SchemaInspector
                 $rawIndexes = $connection->select("SHOW INDEX FROM `{$table}`");
                 foreach ($rawIndexes as $index) {
                     $indexName = $index->Key_name;
-                    if (!isset($indexes[$indexName])) {
+                    if (! isset($indexes[$indexName])) {
                         $indexes[$indexName] = [
                             'name' => $indexName,
                             'columns' => [],
-                            'unique' => !$index->Non_unique,
+                            'unique' => ! $index->Non_unique,
                             'primary' => $indexName === 'PRIMARY',
                         ];
                     }
                     $indexes[$indexName]['columns'][] = $index->Column_name;
                 }
             } elseif ($driverName === 'pgsql') {
-                $rawIndexes = $connection->select("
+                $rawIndexes = $connection->select('
                     SELECT 
                         i.relname AS index_name,
                         a.attname AS column_name,
@@ -207,11 +205,11 @@ class SchemaInspector
                     JOIN pg_class i ON i.oid = ix.indexrelid
                     JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY(ix.indkey)
                     WHERE t.relname = ?
-                ", [$table]);
+                ', [$table]);
 
                 foreach ($rawIndexes as $index) {
                     $indexName = $index->index_name;
-                    if (!isset($indexes[$indexName])) {
+                    if (! isset($indexes[$indexName])) {
                         $indexes[$indexName] = [
                             'name' => $indexName,
                             'columns' => [],
@@ -237,7 +235,7 @@ class SchemaInspector
         try {
             if ($driverName === 'mysql') {
                 $database = $connection->getDatabaseName();
-                $rawForeignKeys = $connection->select("
+                $rawForeignKeys = $connection->select('
                     SELECT 
                         CONSTRAINT_NAME as name,
                         COLUMN_NAME as column,
@@ -247,7 +245,7 @@ class SchemaInspector
                     WHERE TABLE_SCHEMA = ? 
                         AND TABLE_NAME = ?
                         AND REFERENCED_TABLE_NAME IS NOT NULL
-                ", [$database, $table]);
+                ', [$database, $table]);
 
                 foreach ($rawForeignKeys as $fk) {
                     $foreignKeys[] = [
@@ -302,7 +300,7 @@ class SchemaInspector
     protected function getPrimaryKey(string $table, $connection): ?array
     {
         $indexes = $this->getIndexes($table, $connection);
-        
+
         foreach ($indexes as $index) {
             if ($index['primary']) {
                 return [
@@ -318,20 +316,22 @@ class SchemaInspector
     protected function getTableEngine(string $table, $connection): ?string
     {
         if ($connection->getDriverName() === 'mysql') {
-            $result = $connection->selectOne("SHOW TABLE STATUS WHERE Name = ?", [$table]);
+            $result = $connection->selectOne('SHOW TABLE STATUS WHERE Name = ?', [$table]);
+
             return $result->Engine ?? null;
         }
-        
+
         return null;
     }
 
     protected function getTableCollation(string $table, $connection): ?string
     {
         if ($connection->getDriverName() === 'mysql') {
-            $result = $connection->selectOne("SHOW TABLE STATUS WHERE Name = ?", [$table]);
+            $result = $connection->selectOne('SHOW TABLE STATUS WHERE Name = ?', [$table]);
+
             return $result->Collation ?? null;
         }
-        
+
         return null;
     }
 

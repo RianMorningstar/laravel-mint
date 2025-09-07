@@ -2,20 +2,26 @@
 
 namespace LaravelMint\Generators;
 
-use LaravelMint\Mint;
 use Faker\Factory as FakerFactory;
 use Faker\Generator as FakerGenerator;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use LaravelMint\Mint;
 
 abstract class DataGenerator
 {
     protected Mint $mint;
+
     protected array $analysis;
+
     protected FakerGenerator $faker;
+
     protected array $options = [];
+
     protected int $generatedCount = 0;
+
     protected array $cache = [];
+
     protected array $statistics = [];
 
     public function __construct(Mint $mint, array $analysis, array $options = [])
@@ -23,11 +29,11 @@ abstract class DataGenerator
         $this->mint = $mint;
         $this->analysis = $analysis;
         $this->options = $options;
-        
+
         // Initialize Faker with seed if provided
         $seed = $this->mint->getConfig('development.seed');
         $this->faker = FakerFactory::create();
-        
+
         if ($seed !== null) {
             $this->faker->seed($seed);
         }
@@ -59,12 +65,12 @@ abstract class DataGenerator
         for ($i = 0; $i < $chunks; $i++) {
             $currentChunkSize = min($chunkSize, $count - ($i * $chunkSize));
             $chunk = $this->generateChunk($modelClass, $currentChunkSize);
-            
+
             $callback($chunk, $i + 1, $chunks);
-            
+
             // Free memory
             unset($chunk);
-            
+
             // Check memory usage
             if ($this->isMemoryLimitApproaching()) {
                 $this->handleMemoryLimit();
@@ -78,12 +84,12 @@ abstract class DataGenerator
     protected function generateChunk(string $modelClass, int $size): Collection
     {
         $records = collect();
-        
+
         for ($i = 0; $i < $size; $i++) {
             $records->push($this->generateRecord($modelClass));
             $this->generatedCount++;
         }
-        
+
         return $records;
     }
 
@@ -94,25 +100,25 @@ abstract class DataGenerator
     {
         $useTransactions = $this->mint->getConfig('generation.use_transactions', true);
         $connection = $this->mint->getConnection();
-        
+
         if ($useTransactions) {
             $connection->beginTransaction();
         }
-        
+
         try {
             // Disable foreign key checks if needed
-            if (!$this->mint->getConfig('database.foreign_key_checks', true)) {
+            if (! $this->mint->getConfig('database.foreign_key_checks', true)) {
                 $this->disableForeignKeyChecks($connection);
             }
-            
+
             // Insert records
             $modelClass::insert($records->toArray());
-            
+
             // Re-enable foreign key checks
-            if (!$this->mint->getConfig('database.foreign_key_checks', true)) {
+            if (! $this->mint->getConfig('database.foreign_key_checks', true)) {
                 $this->enableForeignKeyChecks($connection);
             }
-            
+
             if ($useTransactions) {
                 $connection->commit();
             }
@@ -131,20 +137,20 @@ abstract class DataGenerator
     {
         // Check for generation hints
         $hints = $columnDetails['generation_hints'] ?? [];
-        
+
         // Use Faker if hint is provided
         if (isset($hints['faker'])) {
             $fakerMethod = $hints['faker'];
             $params = $hints['params'] ?? [];
-            
+
             if (method_exists($this->faker, $fakerMethod)) {
                 return $this->faker->$fakerMethod(...$params);
             }
         }
-        
+
         // Generate based on column type
         $type = $columnDetails['type'] ?? 'string';
-        
+
         return $this->generateByType($type, $columnDetails);
     }
 
@@ -154,59 +160,59 @@ abstract class DataGenerator
     protected function generateByType(string $type, array $columnDetails): mixed
     {
         $nullable = $columnDetails['nullable'] ?? false;
-        
+
         // Random chance of null for nullable columns
         if ($nullable && $this->faker->boolean(10)) { // 10% chance of null
             return null;
         }
-        
+
         switch ($type) {
             case 'integer':
             case 'bigint':
             case 'smallint':
             case 'tinyint':
                 return $this->generateInteger($columnDetails);
-                
+
             case 'decimal':
             case 'float':
             case 'double':
             case 'real':
                 return $this->generateFloat($columnDetails);
-                
+
             case 'boolean':
             case 'bool':
                 return $this->faker->boolean();
-                
+
             case 'date':
                 return $this->faker->date();
-                
+
             case 'datetime':
             case 'timestamp':
                 return $this->faker->dateTime();
-                
+
             case 'time':
                 return $this->faker->time();
-                
+
             case 'string':
             case 'varchar':
             case 'char':
                 return $this->generateString($columnDetails);
-                
+
             case 'text':
             case 'mediumtext':
             case 'longtext':
                 return $this->faker->paragraph();
-                
+
             case 'json':
             case 'jsonb':
                 return json_encode($this->generateJsonData());
-                
+
             case 'uuid':
                 return $this->faker->uuid();
-                
+
             case 'enum':
                 return $this->generateEnum($columnDetails);
-                
+
             default:
                 return $this->generateString($columnDetails);
         }
@@ -219,14 +225,14 @@ abstract class DataGenerator
     {
         $unsigned = $columnDetails['unsigned'] ?? false;
         $autoIncrement = $columnDetails['auto_increment'] ?? false;
-        
+
         if ($autoIncrement) {
             return 0; // Let database handle auto-increment
         }
-        
+
         $min = $unsigned ? 0 : -2147483648;
         $max = 2147483647;
-        
+
         // Adjust for specific integer types
         if (str_contains($columnDetails['type'] ?? '', 'tiny')) {
             $min = $unsigned ? 0 : -128;
@@ -238,7 +244,7 @@ abstract class DataGenerator
             $min = $unsigned ? 0 : PHP_INT_MIN;
             $max = PHP_INT_MAX;
         }
-        
+
         return $this->faker->numberBetween($min, $max);
     }
 
@@ -249,9 +255,9 @@ abstract class DataGenerator
     {
         $precision = $columnDetails['precision'] ?? 10;
         $scale = $columnDetails['scale'] ?? 2;
-        
+
         $max = pow(10, $precision - $scale) - 1;
-        
+
         return $this->faker->randomFloat($scale, 0, $max);
     }
 
@@ -261,7 +267,7 @@ abstract class DataGenerator
     protected function generateString(array $columnDetails): string
     {
         $maxLength = $columnDetails['max_length'] ?? $columnDetails['length'] ?? 255;
-        
+
         // Generate appropriate length string
         if ($maxLength <= 10) {
             return $this->faker->lexify(str_repeat('?', $maxLength));
@@ -295,6 +301,7 @@ abstract class DataGenerator
     protected function generateEnum(array $columnDetails): string
     {
         $values = $columnDetails['enum_values'] ?? ['option1', 'option2', 'option3'];
+
         return $this->faker->randomElement($values);
     }
 
@@ -305,7 +312,7 @@ abstract class DataGenerator
     {
         $memoryLimit = $this->parseMemoryLimit($this->mint->getConfig('generation.memory_limit', '512M'));
         $currentUsage = memory_get_usage(true);
-        
+
         // Consider approaching if we're at 80% of limit
         return $currentUsage > ($memoryLimit * 0.8);
     }
@@ -317,10 +324,10 @@ abstract class DataGenerator
     {
         // Clear caches
         $this->cache = [];
-        
+
         // Force garbage collection
         gc_collect_cycles();
-        
+
         // Log warning if monitoring is enabled
         if ($this->mint->getConfig('monitoring.enabled')) {
             $this->logMemoryWarning();
@@ -334,7 +341,7 @@ abstract class DataGenerator
     {
         $unit = strtolower(substr($limit, -1));
         $value = (int) substr($limit, 0, -1);
-        
+
         switch ($unit) {
             case 'g':
                 return $value * 1024 * 1024 * 1024;
@@ -353,7 +360,7 @@ abstract class DataGenerator
     protected function disableForeignKeyChecks($connection): void
     {
         $driver = $connection->getDriverName();
-        
+
         switch ($driver) {
             case 'mysql':
                 $connection->statement('SET FOREIGN_KEY_CHECKS=0');
@@ -373,7 +380,7 @@ abstract class DataGenerator
     protected function enableForeignKeyChecks($connection): void
     {
         $driver = $connection->getDriverName();
-        
+
         switch ($driver) {
             case 'mysql':
                 $connection->statement('SET FOREIGN_KEY_CHECKS=1');
@@ -394,7 +401,7 @@ abstract class DataGenerator
     {
         $currentUsage = memory_get_usage(true);
         $peakUsage = memory_get_peak_usage(true);
-        
+
         \Log::channel($this->mint->getConfig('monitoring.log_channel', 'daily'))
             ->warning('Laravel Mint: Memory limit approaching', [
                 'current_usage' => $this->formatBytes($currentUsage),
@@ -410,13 +417,13 @@ abstract class DataGenerator
     {
         $units = ['B', 'KB', 'MB', 'GB'];
         $i = 0;
-        
+
         while ($bytes >= 1024 && $i < count($units) - 1) {
             $bytes /= 1024;
             $i++;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**

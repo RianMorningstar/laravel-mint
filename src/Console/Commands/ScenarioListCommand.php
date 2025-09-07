@@ -3,9 +3,9 @@
 namespace LaravelMint\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaravelMint\Scenarios\ScenarioRunner;
 use LaravelMint\Scenarios\Presets\EcommerceScenario;
 use LaravelMint\Scenarios\Presets\SaaSScenario;
+use LaravelMint\Scenarios\ScenarioRunner;
 
 class ScenarioListCommand extends Command
 {
@@ -40,6 +40,7 @@ class ScenarioListCommand extends Command
 
         if (empty($scenarios)) {
             $this->warn('No scenarios available.');
+
             return 0;
         }
 
@@ -58,7 +59,7 @@ class ScenarioListCommand extends Command
     protected function displaySimpleList(array $scenarios): void
     {
         $tableData = [];
-        
+
         foreach ($scenarios as $name => $info) {
             $tableData[] = [
                 $name,
@@ -83,9 +84,9 @@ class ScenarioListCommand extends Command
         foreach ($scenarios as $name => $info) {
             $this->info("Scenario: {$name}");
             $this->line("Description: {$info['description']}");
-            
+
             // Display required models
-            if (!empty($info['required_models'])) {
+            if (! empty($info['required_models'])) {
                 $this->line('Required Models:');
                 foreach ($info['required_models'] as $model) {
                     $modelName = class_basename($model);
@@ -95,7 +96,7 @@ class ScenarioListCommand extends Command
             }
 
             // Display optional models
-            if (!empty($info['optional_models'])) {
+            if (! empty($info['optional_models'])) {
                 $this->line('Optional Models:');
                 foreach ($info['optional_models'] as $model) {
                     $modelName = class_basename($model);
@@ -105,30 +106,34 @@ class ScenarioListCommand extends Command
             }
 
             // Display parameters
-            if (!empty($info['parameters'])) {
+            if (! empty($info['parameters'])) {
                 $this->line('Parameters:');
                 foreach ($info['parameters'] as $param => $rules) {
                     $type = $rules['type'] ?? 'mixed';
                     $default = isset($rules['default']) ? json_encode($rules['default']) : 'none';
                     $required = isset($rules['required']) && $rules['required'] ? '*' : '';
-                    
+
                     $this->line("  • {$param}{$required} ({$type})");
-                    
+
                     if (isset($rules['description'])) {
                         $this->line("    {$rules['description']}");
                     }
-                    
+
                     $this->line("    Default: {$default}");
-                    
+
                     if (isset($rules['min']) || isset($rules['max'])) {
                         $range = [];
-                        if (isset($rules['min'])) $range[] = "min: {$rules['min']}";
-                        if (isset($rules['max'])) $range[] = "max: {$rules['max']}";
-                        $this->line("    Range: " . implode(', ', $range));
+                        if (isset($rules['min'])) {
+                            $range[] = "min: {$rules['min']}";
+                        }
+                        if (isset($rules['max'])) {
+                            $range[] = "max: {$rules['max']}";
+                        }
+                        $this->line('    Range: '.implode(', ', $range));
                     }
-                    
+
                     if (isset($rules['enum'])) {
-                        $this->line("    Options: " . implode(', ', $rules['enum']));
+                        $this->line('    Options: '.implode(', ', $rules['enum']));
                     }
                 }
             }
@@ -136,29 +141,29 @@ class ScenarioListCommand extends Command
             $this->newLine();
             $this->line('Example usage:');
             $this->comment("  php artisan mint:scenario {$name}");
-            
-            if (!empty($info['parameters'])) {
+
+            if (! empty($info['parameters'])) {
                 $exampleParams = [];
                 foreach (array_slice($info['parameters'], 0, 2) as $param => $rules) {
-                    $exampleValue = $rules['default'] ?? match($rules['type'] ?? 'string') {
+                    $exampleValue = $rules['default'] ?? match ($rules['type'] ?? 'string') {
                         'integer' => 100,
                         'float' => 0.5,
                         'boolean' => 'true',
                         default => 'value',
                     };
-                    
+
                     if (is_array($exampleValue)) {
                         $exampleValue = json_encode($exampleValue);
                     }
-                    
+
                     $exampleParams[] = "--config={$param}={$exampleValue}";
                 }
-                
-                if (!empty($exampleParams)) {
-                    $this->comment("  php artisan mint:scenario {$name} " . implode(' ', $exampleParams));
+
+                if (! empty($exampleParams)) {
+                    $this->comment("  php artisan mint:scenario {$name} ".implode(' ', $exampleParams));
                 }
             }
-            
+
             $this->newLine();
             $this->line(str_repeat('-', 60));
             $this->newLine();

@@ -3,20 +3,23 @@
 namespace LaravelMint\Generators;
 
 use LaravelMint\Mint;
-use LaravelMint\Patterns\PatternRegistry;
 use LaravelMint\Patterns\PatternInterface;
+use LaravelMint\Patterns\PatternRegistry;
 
 class PatternAwareGenerator extends SimpleGenerator
 {
     protected PatternRegistry $patternRegistry;
+
     protected array $columnPatterns = [];
+
     protected array $modelPatterns = [];
+
     protected array $globalPatterns = [];
 
     public function __construct(Mint $mint, array $analysis, array $options = [])
     {
         parent::__construct($mint, $analysis, $options);
-        $this->patternRegistry = new PatternRegistry();
+        $this->patternRegistry = new PatternRegistry;
         $this->loadPatterns();
     }
 
@@ -34,7 +37,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 $this->globalPatterns[$name] = $this->patternRegistry->load($config);
             }
         }
-        
+
         // Load model-specific patterns
         $modelPatterns = $this->options['model_patterns'] ?? [];
         foreach ($modelPatterns as $model => $patterns) {
@@ -47,7 +50,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 }
             }
         }
-        
+
         // Load column-specific patterns
         $columnPatterns = $this->options['column_patterns'] ?? [];
         foreach ($columnPatterns as $column => $config) {
@@ -65,12 +68,12 @@ class PatternAwareGenerator extends SimpleGenerator
     protected function generateRecord(string $modelClass, array $overrides = []): array
     {
         $record = parent::generateRecord($modelClass, $overrides);
-        
+
         // Apply model patterns
         $modelName = class_basename($modelClass);
         if (isset($this->modelPatterns[$modelName])) {
             foreach ($this->modelPatterns[$modelName] as $column => $pattern) {
-                if (!array_key_exists($column, $overrides)) {
+                if (! array_key_exists($column, $overrides)) {
                     $record[$column] = $this->generateWithPattern($pattern, [
                         'model' => $modelClass,
                         'column' => $column,
@@ -79,10 +82,10 @@ class PatternAwareGenerator extends SimpleGenerator
                 }
             }
         }
-        
+
         // Apply column patterns
         foreach ($this->columnPatterns as $column => $pattern) {
-            if (isset($record[$column]) && !array_key_exists($column, $overrides)) {
+            if (isset($record[$column]) && ! array_key_exists($column, $overrides)) {
                 $record[$column] = $this->generateWithPattern($pattern, [
                     'model' => $modelClass,
                     'column' => $column,
@@ -90,7 +93,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 ]);
             }
         }
-        
+
         return $record;
     }
 
@@ -106,16 +109,17 @@ class PatternAwareGenerator extends SimpleGenerator
                 'details' => $columnDetails,
             ]);
         }
-        
+
         // Check for pattern hint in column details
         if (isset($columnDetails['pattern'])) {
             $pattern = $this->patternRegistry->create($columnDetails['pattern'], $columnDetails['pattern_config'] ?? []);
+
             return $this->generateWithPattern($pattern, [
                 'column' => $column,
                 'details' => $columnDetails,
             ]);
         }
-        
+
         // Check for inferred patterns based on column name
         $inferredPattern = $this->inferPatternForColumn($column, $columnDetails);
         if ($inferredPattern) {
@@ -124,7 +128,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'details' => $columnDetails,
             ]);
         }
-        
+
         // Fall back to parent implementation
         return parent::generateColumnValue($column, $columnDetails);
     }
@@ -135,13 +139,13 @@ class PatternAwareGenerator extends SimpleGenerator
     protected function generateWithPattern(PatternInterface $pattern, array $context = []): mixed
     {
         // Add timestamp context if dealing with temporal patterns
-        if (!isset($context['timestamp'])) {
-            $context['timestamp'] = new \DateTime();
+        if (! isset($context['timestamp'])) {
+            $context['timestamp'] = new \DateTime;
         }
-        
+
         // Add record context
         $context['generated_count'] = $this->generatedCount;
-        
+
         return $pattern->generate($context);
     }
 
@@ -152,7 +156,7 @@ class PatternAwareGenerator extends SimpleGenerator
     {
         $columnLower = strtolower($column);
         $type = $columnDetails['type'] ?? '';
-        
+
         // Price/amount columns often follow normal distribution
         if (str_contains($columnLower, 'price') || str_contains($columnLower, 'amount') || str_contains($columnLower, 'cost')) {
             return $this->patternRegistry->create('normal', [
@@ -162,7 +166,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'max' => 10000,
             ]);
         }
-        
+
         // Age typically follows a normal distribution
         if (str_contains($columnLower, 'age')) {
             return $this->patternRegistry->create('normal', [
@@ -172,7 +176,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'max' => 90,
             ]);
         }
-        
+
         // View/visit counts often follow Pareto distribution
         if (str_contains($columnLower, 'view') || str_contains($columnLower, 'visit') || str_contains($columnLower, 'click')) {
             return $this->patternRegistry->create('pareto', [
@@ -181,7 +185,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'max' => 100000,
             ]);
         }
-        
+
         // Count fields might follow Poisson distribution
         if (str_contains($columnLower, 'count') && str_contains($type, 'int')) {
             return $this->patternRegistry->create('poisson', [
@@ -189,7 +193,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'max' => 50,
             ]);
         }
-        
+
         // Time between events (intervals) follow exponential
         if (str_contains($columnLower, 'interval') || str_contains($columnLower, 'duration')) {
             return $this->patternRegistry->create('exponential', [
@@ -198,7 +202,7 @@ class PatternAwareGenerator extends SimpleGenerator
                 'max' => 3600,
             ]);
         }
-        
+
         return null;
     }
 
@@ -223,10 +227,10 @@ class PatternAwareGenerator extends SimpleGenerator
      */
     public function setModelPattern(string $model, string $column, $pattern): void
     {
-        if (!isset($this->modelPatterns[$model])) {
+        if (! isset($this->modelPatterns[$model])) {
             $this->modelPatterns[$model] = [];
         }
-        
+
         if (is_string($pattern)) {
             $this->modelPatterns[$model][$column] = $this->patternRegistry->create($pattern);
         } elseif (is_array($pattern)) {

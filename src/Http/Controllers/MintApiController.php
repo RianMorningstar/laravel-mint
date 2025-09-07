@@ -2,27 +2,26 @@
 
 namespace LaravelMint\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Queue;
-use LaravelMint\Mint;
-use LaravelMint\Import\ImportManager;
 use LaravelMint\Export\ExportManager;
-use LaravelMint\Jobs\GenerateDataJob;
 use LaravelMint\Http\Middleware\VerifyApiKey;
+use LaravelMint\Import\ImportManager;
+use LaravelMint\Jobs\GenerateDataJob;
+use LaravelMint\Mint;
 
 class MintApiController extends Controller
 {
     protected Mint $mint;
-    
+
     public function __construct(Mint $mint)
     {
         $this->mint = $mint;
         $this->middleware(VerifyApiKey::class);
         $this->middleware('throttle:60,1');
     }
-    
+
     /**
      * Generate data via API
      */
@@ -35,35 +34,35 @@ class MintApiController extends Controller
             'async' => 'boolean',
             'webhook_url' => 'url',
         ]);
-        
+
         // Check if model exists
-        if (!class_exists($validated['model'])) {
+        if (! class_exists($validated['model'])) {
             return response()->json([
                 'error' => 'Model not found',
                 'model' => $validated['model'],
             ], 404);
         }
-        
+
         // Async generation for large datasets
         if ($request->get('async', false) || $validated['count'] > 1000) {
             return $this->generateAsync($validated);
         }
-        
+
         // Synchronous generation
         try {
             $startTime = microtime(true);
-            
+
             $result = $this->mint->generate(
                 $validated['model'],
                 $validated['count'],
                 $validated['options'] ?? []
             );
-            
+
             return response()->json([
                 'success' => true,
                 'model' => $validated['model'],
                 'count' => $validated['count'],
-                'execution_time' => round(microtime(true) - $startTime, 2) . 's',
+                'execution_time' => round(microtime(true) - $startTime, 2).'s',
                 'data' => $request->get('include_data', false) ? $result : null,
             ]);
         } catch (\Exception $e) {
@@ -73,14 +72,14 @@ class MintApiController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Generate data asynchronously
      */
     protected function generateAsync(array $validated): JsonResponse
     {
         $jobId = uniqid('mint_job_');
-        
+
         // Dispatch job
         GenerateDataJob::dispatch(
             $validated['model'],
@@ -88,7 +87,7 @@ class MintApiController extends Controller
             $validated['options'] ?? [],
             $validated['webhook_url'] ?? null
         )->onQueue('mint');
-        
+
         // Store job metadata
         cache()->put("mint_job_{$jobId}", [
             'status' => 'queued',
@@ -96,7 +95,7 @@ class MintApiController extends Controller
             'count' => $validated['count'],
             'created_at' => now(),
         ], 3600);
-        
+
         return response()->json([
             'success' => true,
             'job_id' => $jobId,
@@ -104,24 +103,24 @@ class MintApiController extends Controller
             'check_url' => route('mint.api.status', ['jobId' => $jobId]),
         ], 202);
     }
-    
+
     /**
      * Check job status
      */
     public function status(string $jobId): JsonResponse
     {
         $job = cache()->get("mint_job_{$jobId}");
-        
-        if (!$job) {
+
+        if (! $job) {
             return response()->json([
                 'error' => 'Job not found',
                 'job_id' => $jobId,
             ], 404);
         }
-        
+
         return response()->json($job);
     }
-    
+
     /**
      * Import data via API
      */
@@ -133,32 +132,32 @@ class MintApiController extends Controller
             'mappings' => 'array',
             'rules' => 'array',
         ]);
-        
+
         try {
-            $manager = new ImportManager();
-            
+            $manager = new ImportManager;
+
             // Configure mappings
             if (isset($validated['mappings'])) {
                 foreach ($validated['mappings'] as $model => $mapping) {
                     $manager->mapping($model, $mapping);
                 }
             }
-            
+
             // Configure validation rules
             if (isset($validated['rules'])) {
                 $manager->rules($validated['rules']);
             }
-            
+
             // Store uploaded file
             $path = $request->file('file')->store('imports');
-            $fullPath = storage_path('app/' . $path);
-            
+            $fullPath = storage_path('app/'.$path);
+
             // Import
             $result = $manager->import($fullPath, $validated['format'] ?? null);
-            
+
             // Clean up
             unlink($fullPath);
-            
+
             return response()->json($result->toArray());
         } catch (\Exception $e) {
             return response()->json([
@@ -167,7 +166,7 @@ class MintApiController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Export data via API
      */
@@ -181,22 +180,22 @@ class MintApiController extends Controller
             'fields' => 'array',
             'conditions' => 'array',
         ]);
-        
+
         try {
-            $manager = new ExportManager();
-            
+            $manager = new ExportManager;
+
             // Configure models
             foreach ($validated['models'] as $model) {
-                if (!class_exists($model)) {
+                if (! class_exists($model)) {
                     return response()->json([
                         'error' => 'Model not found',
                         'model' => $model,
                     ], 404);
                 }
-                
+
                 $fields = $validated['fields'][$model] ?? null;
                 $manager->model($model, $fields);
-                
+
                 // Add conditions
                 if (isset($validated['conditions'][$model])) {
                     foreach ($validated['conditions'][$model] as $condition) {
@@ -204,25 +203,25 @@ class MintApiController extends Controller
                     }
                 }
             }
-            
+
             // Configure compression
             if ($request->get('compress', false)) {
                 $manager->compress();
             }
-            
+
             // Export
             $result = $manager->export($validated['format']);
-            
+
             if ($result->isSuccess()) {
-                $url = asset('storage/exports/' . basename($result->getOutputPath()));
-                
+                $url = asset('storage/exports/'.basename($result->getOutputPath()));
+
                 return response()->json([
                     'success' => true,
                     'download_url' => $url,
                     'details' => $result->toArray(),
                 ]);
             }
-            
+
             return response()->json([
                 'error' => 'Export failed',
                 'details' => $result->toArray(),
@@ -234,7 +233,7 @@ class MintApiController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * List available models
      */
@@ -242,16 +241,16 @@ class MintApiController extends Controller
     {
         $models = [];
         $modelsPath = app_path('Models');
-        
+
         if (is_dir($modelsPath)) {
-            $files = glob($modelsPath . '/*.php');
-            
+            $files = glob($modelsPath.'/*.php');
+
             foreach ($files as $file) {
-                $className = 'App\\Models\\' . basename($file, '.php');
-                
+                $className = 'App\\Models\\'.basename($file, '.php');
+
                 if (class_exists($className)) {
-                    $model = new $className();
-                    
+                    $model = new $className;
+
                     $models[] = [
                         'class' => $className,
                         'name' => class_basename($className),
@@ -262,20 +261,20 @@ class MintApiController extends Controller
                 }
             }
         }
-        
+
         return response()->json([
             'models' => $models,
             'count' => count($models),
         ]);
     }
-    
+
     /**
      * Get available patterns
      */
     public function patterns(): JsonResponse
     {
         $patterns = config('mint.patterns', []);
-        
+
         return response()->json([
             'patterns' => $patterns,
             'distributions' => [
@@ -291,28 +290,28 @@ class MintApiController extends Controller
             ],
         ]);
     }
-    
+
     /**
      * Get scenarios
      */
     public function scenarios(): JsonResponse
     {
         $runner = app(\LaravelMint\Scenarios\ScenarioRunner::class);
-        
+
         // Register built-in scenarios
         $runner->registerMany([
             'ecommerce' => \LaravelMint\Scenarios\Presets\EcommerceScenario::class,
             'saas' => \LaravelMint\Scenarios\Presets\SaaSScenario::class,
         ]);
-        
+
         $scenarios = $runner->list();
-        
+
         return response()->json([
             'scenarios' => $scenarios,
             'count' => count($scenarios),
         ]);
     }
-    
+
     /**
      * Run scenario
      */
@@ -323,27 +322,27 @@ class MintApiController extends Controller
             'options' => 'array',
             'dry_run' => 'boolean',
         ]);
-        
+
         try {
             $runner = app(\LaravelMint\Scenarios\ScenarioRunner::class);
-            
+
             // Register scenarios
             $runner->registerMany([
                 'ecommerce' => \LaravelMint\Scenarios\Presets\EcommerceScenario::class,
                 'saas' => \LaravelMint\Scenarios\Presets\SaaSScenario::class,
             ]);
-            
+
             // Configure runner
             if ($request->get('dry_run', false)) {
                 $runner->dryRun(true);
             }
-            
+
             // Run scenario
             $result = $runner->run(
                 $validated['scenario'],
                 $validated['options'] ?? []
             );
-            
+
             return response()->json([
                 'success' => $result->isSuccess(),
                 'scenario' => $validated['scenario'],
@@ -356,20 +355,20 @@ class MintApiController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Get statistics
      */
     public function statistics(): JsonResponse
     {
         $stats = [];
-        
+
         // Get model counts
         $models = $this->models()->getData()->models;
-        
+
         foreach ($models as $model) {
             $modelClass = $model->class;
-            
+
             try {
                 $stats['models'][$model->name] = [
                     'count' => $modelClass::count(),
@@ -382,18 +381,18 @@ class MintApiController extends Controller
                 ];
             }
         }
-        
+
         // Get cache statistics
-        $cacheManager = new \LaravelMint\Performance\CacheManager();
+        $cacheManager = new \LaravelMint\Performance\CacheManager;
         $stats['cache'] = $cacheManager->getStatistics();
-        
+
         // Get memory statistics
-        $memoryMonitor = new \LaravelMint\Performance\MemoryMonitor();
+        $memoryMonitor = new \LaravelMint\Performance\MemoryMonitor;
         $stats['memory'] = $memoryMonitor->getStatistics();
-        
+
         return response()->json($stats);
     }
-    
+
     /**
      * Health check
      */

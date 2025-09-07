@@ -2,14 +2,14 @@
 
 namespace LaravelMint\Generators;
 
-use LaravelMint\Mint;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class SimpleGenerator extends DataGenerator
 {
     protected array $generatedModels = [];
+
     protected array $relationshipCache = [];
 
     /**
@@ -19,32 +19,32 @@ class SimpleGenerator extends DataGenerator
     {
         $this->options = array_merge($this->options, $options);
         $generated = collect();
-        
+
         // Show progress if in CLI
-        if (php_sapi_name() === 'cli' && !($options['silent'] ?? false)) {
+        if (php_sapi_name() === 'cli' && ! ($options['silent'] ?? false)) {
             $this->showProgress("Generating {$count} {$modelClass} records");
         }
-        
+
         // Generate in chunks
         $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass) {
             // Insert chunk into database
             $this->insertRecords($modelClass, $chunk);
             $generated = $generated->merge($chunk);
-            
+
             if (php_sapi_name() === 'cli') {
                 $this->updateProgress($current, $total);
             }
         });
-        
+
         // Handle relationships after all base records are created
-        if (!empty($this->analysis['relationships'])) {
+        if (! empty($this->analysis['relationships'])) {
             $this->processRelationships($modelClass, $generated);
         }
-        
+
         if (php_sapi_name() === 'cli') {
             $this->completeProgress();
         }
-        
+
         return $generated;
     }
 
@@ -57,42 +57,43 @@ class SimpleGenerator extends DataGenerator
         $modelAnalysis = $this->analysis['model'] ?? [];
         $schemaAnalysis = $this->analysis['schema'] ?? [];
         $columns = $schemaAnalysis['columns'] ?? [];
-        
+
         // Get fillable fields
         $fillable = $modelAnalysis['fillable'] ?? [];
         $guarded = $modelAnalysis['guarded'] ?? [];
-        
+
         // If fillable is empty and guarded only has default Laravel guards, get all columns
         if (empty($fillable) && (empty($guarded) || $guarded === ['*'])) {
             $fillable = array_keys($columns);
-        } elseif (empty($fillable) && !empty($guarded)) {
+        } elseif (empty($fillable) && ! empty($guarded)) {
             // Get all columns except guarded
             $fillable = array_diff(array_keys($columns), $guarded);
         }
-        
+
         // Generate values for each fillable column
         foreach ($fillable as $column) {
             // Skip if in overrides
             if (array_key_exists($column, $overrides)) {
                 $record[$column] = $overrides[$column];
+
                 continue;
             }
-            
+
             // Skip primary key if auto-incrementing
             if ($column === $modelAnalysis['primary_key'] && $modelAnalysis['incrementing']) {
                 continue;
             }
-            
+
             // Skip timestamps - Laravel will handle these
             if ($modelAnalysis['timestamps'] && in_array($column, ['created_at', 'updated_at'])) {
                 continue;
             }
-            
+
             // Skip if column doesn't exist in schema
-            if (!isset($columns[$column])) {
+            if (! isset($columns[$column])) {
                 continue;
             }
-            
+
             // Check if this is a foreign key or foreign key pattern
             $foreignKey = $this->findForeignKey($column, $schemaAnalysis['foreign_keys'] ?? []);
             if ($foreignKey) {
@@ -108,17 +109,17 @@ class SimpleGenerator extends DataGenerator
                 $record[$column] = $this->generateColumnValue($column, $columns[$column]);
             }
         }
-        
+
         // Apply any casts
         $record = $this->applyCasts($record, $modelAnalysis['casts'] ?? []);
-        
+
         // Add timestamps if needed
         if ($modelAnalysis['timestamps']) {
             $now = now();
             $record['created_at'] = $now;
             $record['updated_at'] = $now;
         }
-        
+
         return array_merge($record, $overrides);
     }
 
@@ -132,6 +133,7 @@ class SimpleGenerator extends DataGenerator
                 return $fk;
             }
         }
+
         return null;
     }
 
@@ -142,24 +144,24 @@ class SimpleGenerator extends DataGenerator
     {
         $foreignTable = $foreignKey['foreign_table'];
         $foreignColumn = $foreignKey['foreign_column'] ?? 'id';
-        
+
         // Try to get an existing ID from the foreign table
         $connection = $this->mint->getConnection();
-        
+
         // Cache foreign key values for performance
         $cacheKey = "{$foreignTable}.{$foreignColumn}";
-        if (!isset($this->relationshipCache[$cacheKey])) {
+        if (! isset($this->relationshipCache[$cacheKey])) {
             $this->relationshipCache[$cacheKey] = $connection->table($foreignTable)
                 ->pluck($foreignColumn)
                 ->toArray();
         }
-        
+
         if (empty($this->relationshipCache[$cacheKey])) {
             // No records in foreign table, return null if nullable
             // This should be handled by proper generation order
             return null;
         }
-        
+
         // Return a random foreign key value
         return $this->faker->randomElement($this->relationshipCache[$cacheKey]);
     }
@@ -170,33 +172,33 @@ class SimpleGenerator extends DataGenerator
     protected function applyCasts(array $record, array $casts): array
     {
         foreach ($casts as $column => $cast) {
-            if (!isset($record[$column])) {
+            if (! isset($record[$column])) {
                 continue;
             }
-            
+
             $value = $record[$column];
-            
+
             switch ($cast) {
                 case 'boolean':
                 case 'bool':
                     $record[$column] = (bool) $value;
                     break;
-                    
+
                 case 'integer':
                 case 'int':
                     $record[$column] = (int) $value;
                     break;
-                    
+
                 case 'float':
                 case 'double':
                 case 'real':
                     $record[$column] = (float) $value;
                     break;
-                    
+
                 case 'string':
                     $record[$column] = (string) $value;
                     break;
-                    
+
                 case 'array':
                 case 'json':
                     // For JSON columns, we need to keep the JSON string
@@ -209,19 +211,19 @@ class SimpleGenerator extends DataGenerator
                         $record[$column] = json_encode([$value]);
                     }
                     break;
-                    
+
                 case 'object':
                     if (is_string($value)) {
-                        $record[$column] = json_decode($value) ?? new \stdClass();
+                        $record[$column] = json_decode($value) ?? new \stdClass;
                     } elseif (is_array($value)) {
                         $record[$column] = (object) $value;
                     }
                     break;
-                    
+
                 case 'collection':
                     $record[$column] = collect($value);
                     break;
-                    
+
                 case 'date':
                 case 'datetime':
                 case 'custom_datetime':
@@ -230,13 +232,13 @@ class SimpleGenerator extends DataGenerator
                 case 'timestamp':
                     // These will be handled by Eloquent
                     break;
-                    
+
                 default:
                     // Custom cast classes - leave as is
                     break;
             }
         }
-        
+
         return $record;
     }
 
@@ -246,21 +248,21 @@ class SimpleGenerator extends DataGenerator
     protected function processRelationships(string $modelClass, Collection $generated): void
     {
         $relationships = $this->analysis['relationships'] ?? [];
-        
+
         if (empty($relationships)) {
             return;
         }
-        
+
         // Get actual model instances
         $primaryKey = $this->analysis['model']['primary_key'] ?? 'id';
         $ids = $generated->pluck($primaryKey)->toArray();
-        
+
         if (empty($ids)) {
             return;
         }
-        
+
         $models = $modelClass::whereIn($primaryKey, $ids)->get();
-        
+
         foreach ($models as $model) {
             $this->handleRelationships($model, $relationships);
         }
@@ -274,26 +276,26 @@ class SimpleGenerator extends DataGenerator
         foreach ($relationships as $relationName => $relationData) {
             $relationType = $relationData['type'] ?? '';
             $relatedModel = $relationData['related_model'] ?? null;
-            
-            if (!$relatedModel || !class_exists($relatedModel)) {
+
+            if (! $relatedModel || ! class_exists($relatedModel)) {
                 continue;
             }
-            
+
             switch ($relationType) {
                 case 'hasOne':
                     $this->handleHasOne($model, $relationName, $relatedModel, $relationData);
                     break;
-                    
+
                 case 'hasMany':
                     $this->handleHasMany($model, $relationName, $relatedModel, $relationData);
                     break;
-                    
+
                 case 'belongsToMany':
                     $this->handleBelongsToMany($model, $relationName, $relatedModel, $relationData);
                     break;
-                    
-                // BelongsTo is handled during record generation via foreign keys
-                // MorphTo, MorphOne, MorphMany etc. can be added later
+
+                    // BelongsTo is handled during record generation via foreign keys
+                    // MorphTo, MorphOne, MorphMany etc. can be added later
             }
         }
     }
@@ -304,28 +306,28 @@ class SimpleGenerator extends DataGenerator
     protected function handleHasOne(Model $model, string $relationName, string $relatedModel, array $relationData): void
     {
         // Randomly decide if this relationship should exist
-        if (!$this->faker->boolean(70)) { // 70% chance of having the relationship
+        if (! $this->faker->boolean(70)) { // 70% chance of having the relationship
             return;
         }
-        
-        $foreignKey = $relationData['foreign_key'] ?? Str::snake(class_basename($model)) . '_id';
-        
+
+        $foreignKey = $relationData['foreign_key'] ?? Str::snake(class_basename($model)).'_id';
+
         // Check if related record already exists
         $existing = $relatedModel::where($foreignKey, $model->getKey())->exists();
         if ($existing) {
             return;
         }
-        
+
         // Create related record
-        $relatedInstance = new $relatedModel();
+        $relatedInstance = new $relatedModel;
         $relatedAnalysis = $this->mint->analyze($relatedModel);
-        
+
         // Generate data for related model
         $relatedGenerator = new self($this->mint, $relatedAnalysis, $this->options);
         $relatedData = $relatedGenerator->generateRecord($relatedModel, [
-            $foreignKey => $model->getKey()
+            $foreignKey => $model->getKey(),
         ]);
-        
+
         $relatedModel::create($relatedData);
     }
 
@@ -336,24 +338,24 @@ class SimpleGenerator extends DataGenerator
     {
         // Generate random number of related records
         $count = $this->faker->numberBetween(0, 5); // Adjust as needed
-        
+
         if ($count === 0) {
             return;
         }
-        
-        $foreignKey = $relationData['foreign_key'] ?? Str::snake(class_basename($model)) . '_id';
-        
+
+        $foreignKey = $relationData['foreign_key'] ?? Str::snake(class_basename($model)).'_id';
+
         // Create related records
-        $relatedInstance = new $relatedModel();
+        $relatedInstance = new $relatedModel;
         $relatedAnalysis = $this->mint->analyze($relatedModel);
-        
+
         $relatedGenerator = new self($this->mint, $relatedAnalysis, $this->options);
-        
+
         for ($i = 0; $i < $count; $i++) {
             $relatedData = $relatedGenerator->generateRecord($relatedModel, [
-                $foreignKey => $model->getKey()
+                $foreignKey => $model->getKey(),
             ]);
-            
+
             $relatedModel::create($relatedData);
         }
     }
@@ -365,23 +367,23 @@ class SimpleGenerator extends DataGenerator
     {
         // Get some existing related models
         $relatedCount = $relatedModel::count();
-        
+
         if ($relatedCount === 0) {
             return;
         }
-        
+
         // Attach random number of related models
         $attachCount = min($this->faker->numberBetween(0, 3), $relatedCount);
-        
+
         if ($attachCount === 0) {
             return;
         }
-        
+
         $relatedIds = $relatedModel::inRandomOrder()
             ->limit($attachCount)
             ->pluck('id')
             ->toArray();
-        
+
         // Attach with potential pivot data
         $pivotData = [];
         foreach ($relatedIds as $relatedId) {
@@ -389,10 +391,10 @@ class SimpleGenerator extends DataGenerator
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-            
+
             // Add any additional pivot columns here if needed
         }
-        
+
         try {
             $model->$relationName()->syncWithoutDetaching($pivotData);
         } catch (\Exception $e) {
@@ -414,9 +416,9 @@ class SimpleGenerator extends DataGenerator
     protected function updateProgress(int $current, int $total): void
     {
         $percentage = round(($current / $total) * 100);
-        $bar = str_repeat('=', (int)($percentage / 2));
+        $bar = str_repeat('=', (int) ($percentage / 2));
         $spaces = str_repeat(' ', 50 - strlen($bar));
-        
+
         echo "\r[{$bar}{$spaces}] {$percentage}% ({$current}/{$total} chunks)";
     }
 
@@ -426,7 +428,7 @@ class SimpleGenerator extends DataGenerator
     protected function completeProgress(): void
     {
         echo "\n✓ Generation complete\n";
-        
+
         $stats = $this->getStatistics();
         echo "  Generated: {$stats['generated_count']} records\n";
         echo "  Memory: {$stats['memory_usage']} (peak: {$stats['peak_memory']})\n";
@@ -447,18 +449,18 @@ class SimpleGenerator extends DataGenerator
     {
         // Extract table name from column (e.g., user_id -> users)
         $tableName = Str::plural(str_replace('_id', '', $column));
-        
+
         // Try to get existing IDs from the table
         $connection = $this->mint->getConnection();
-        
+
         try {
             $ids = $connection->table($tableName)->pluck('id')->toArray();
-            
+
             if (empty($ids)) {
                 // No records in foreign table
                 return null;
             }
-            
+
             return $this->faker->randomElement($ids);
         } catch (\Exception $e) {
             // Table doesn't exist or other error
@@ -488,8 +490,8 @@ class SimpleGenerator extends DataGenerator
             'discount',
             'amount',
         ];
-        
-        return in_array($column, $specialFields) || 
+
+        return in_array($column, $specialFields) ||
                str_ends_with($column, '_status') ||
                str_ends_with($column, '_state') ||
                str_ends_with($column, '_number') ||
@@ -504,12 +506,12 @@ class SimpleGenerator extends DataGenerator
     protected function generateSpecialField(string $column, array $columnDetails): mixed
     {
         $columnLower = strtolower($column);
-        
+
         // Status fields - check table context first
         if (str_contains($columnLower, 'status') || $column === 'status') {
             // Get table name from analysis to determine context
             $table = $this->analysis['model']['table'] ?? '';
-            
+
             if (str_contains($table, 'order')) {
                 return $this->faker->randomElement(['pending', 'processing', 'completed', 'cancelled']);
             } elseif (str_contains($table, 'payment')) {
@@ -518,45 +520,46 @@ class SimpleGenerator extends DataGenerator
                 return $this->faker->randomElement(['active', 'inactive', 'pending', 'completed']);
             }
         }
-        
+
         // Number fields (order_number, invoice_number, etc.)
         if (str_contains($columnLower, '_number') || $columnLower === 'reference' || $columnLower === 'code') {
             $prefix = strtoupper(substr($column, 0, 3));
-            return $prefix . '-' . $this->faker->unique()->numberBetween(100000, 999999);
+
+            return $prefix.'-'.$this->faker->unique()->numberBetween(100000, 999999);
         }
-        
+
         // UUID fields
         if (str_contains($columnLower, 'uuid')) {
             return $this->faker->uuid();
         }
-        
+
         // Slug fields
         if (str_contains($columnLower, 'slug')) {
             return $this->faker->slug();
         }
-        
+
         // State fields
         if (str_contains($columnLower, 'state')) {
             return $this->faker->randomElement(['draft', 'published', 'archived']);
         }
-        
+
         // Type fields
         if (str_contains($columnLower, 'type')) {
             return $this->faker->randomElement(['standard', 'premium', 'basic', 'advanced']);
         }
-        
+
         // Role fields
         if (str_contains($columnLower, 'role')) {
             return $this->faker->randomElement(['admin', 'user', 'moderator', 'guest']);
         }
-        
+
         // Amount/Total fields - generate decimal values
         if (in_array($columnLower, ['total', 'subtotal', 'tax', 'discount', 'amount']) ||
-            str_contains($columnLower, '_total') || 
+            str_contains($columnLower, '_total') ||
             str_contains($columnLower, '_amount')) {
             return $this->faker->randomFloat(2, 10, 10000);
         }
-        
+
         // Default to normal generation
         return $this->generateColumnValue($column, $columnDetails);
     }

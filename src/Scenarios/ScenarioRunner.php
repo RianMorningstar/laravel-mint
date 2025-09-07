@@ -2,20 +2,25 @@
 
 namespace LaravelMint\Scenarios;
 
-use LaravelMint\Mint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use LaravelMint\Mint;
 
 class ScenarioRunner
 {
     protected Mint $mint;
+
     protected array $scenarios = [];
+
     protected array $results = [];
+
     protected bool $transactional = true;
+
     protected bool $dryRun = false;
+
     protected $progressCallback = null;
 
-    public function __construct(Mint $mint = null)
+    public function __construct(?Mint $mint = null)
     {
         $this->mint = $mint ?? app('mint');
     }
@@ -29,11 +34,12 @@ class ScenarioRunner
             $scenario = new $scenario($this->mint);
         }
 
-        if (!$scenario instanceof ScenarioInterface) {
+        if (! $scenario instanceof ScenarioInterface) {
             throw new \InvalidArgumentException('Scenario must implement ScenarioInterface');
         }
 
         $this->scenarios[$name] = $scenario;
+
         return $this;
     }
 
@@ -45,6 +51,7 @@ class ScenarioRunner
         foreach ($scenarios as $name => $scenario) {
             $this->register($name, $scenario);
         }
+
         return $this;
     }
 
@@ -53,18 +60,18 @@ class ScenarioRunner
      */
     public function discover(string $directory): self
     {
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             throw new \InvalidArgumentException("Directory does not exist: {$directory}");
         }
 
-        $files = glob($directory . '/*Scenario.php');
-        
+        $files = glob($directory.'/*Scenario.php');
+
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file);
-            
+
             if ($className && class_exists($className)) {
                 $scenario = new $className($this->mint);
-                
+
                 if ($scenario instanceof ScenarioInterface) {
                     $name = $scenario->getName();
                     $this->register($name, $scenario);
@@ -81,13 +88,14 @@ class ScenarioRunner
     protected function getClassNameFromFile(string $file): ?string
     {
         $contents = file_get_contents($file);
-        
+
         if (preg_match('/namespace\s+([^;]+);/', $contents, $namespaceMatch)) {
             $namespace = $namespaceMatch[1];
-            
+
             if (preg_match('/class\s+(\w+)/', $contents, $classMatch)) {
                 $className = $classMatch[1];
-                return $namespace . '\\' . $className;
+
+                return $namespace.'\\'.$className;
             }
         }
 
@@ -100,6 +108,7 @@ class ScenarioRunner
     public function withTransactions(bool $use = true): self
     {
         $this->transactional = $use;
+
         return $this;
     }
 
@@ -109,6 +118,7 @@ class ScenarioRunner
     public function dryRun(bool $enable = true): self
     {
         $this->dryRun = $enable;
+
         return $this;
     }
 
@@ -118,6 +128,7 @@ class ScenarioRunner
     public function onProgress(callable $callback): self
     {
         $this->progressCallback = $callback;
+
         return $this;
     }
 
@@ -126,21 +137,22 @@ class ScenarioRunner
      */
     public function run(string $name, array $options = []): ScenarioResult
     {
-        if (!isset($this->scenarios[$name])) {
+        if (! isset($this->scenarios[$name])) {
             throw new \InvalidArgumentException("Scenario not found: {$name}");
         }
 
         $scenario = $this->scenarios[$name];
-        
+
         // Validate scenario
-        $validator = new ScenarioValidator();
+        $validator = new ScenarioValidator;
         $validation = $validator->validate($scenario, $options);
-        
-        if (!$validation->isValid()) {
+
+        if (! $validation->isValid()) {
             $result = new ScenarioResult($name);
             foreach ($validation->getErrors() as $error) {
                 $result->addError($error);
             }
+
             return $result;
         }
 
@@ -178,6 +190,7 @@ class ScenarioRunner
         }
 
         $this->results = $results;
+
         return $results;
     }
 
@@ -196,9 +209,9 @@ class ScenarioRunner
     {
         try {
             DB::beginTransaction();
-            
+
             $result = $scenario->run($options);
-            
+
             if ($result->isSuccess()) {
                 DB::commit();
                 $this->reportProgress($scenario->getName(), 'Scenario completed successfully');
@@ -206,20 +219,20 @@ class ScenarioRunner
                 DB::rollBack();
                 $this->reportProgress($scenario->getName(), 'Scenario failed, rolling back');
             }
-            
+
             return $result;
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             $result = new ScenarioResult($scenario->getName());
-            $result->addError('Exception: ' . $e->getMessage());
-            
+            $result->addError('Exception: '.$e->getMessage());
+
             Log::error('Scenario failed', [
                 'scenario' => $scenario->getName(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $result;
         }
     }
@@ -231,24 +244,24 @@ class ScenarioRunner
     {
         try {
             $result = $scenario->run($options);
-            
+
             if ($result->isSuccess()) {
                 $this->reportProgress($scenario->getName(), 'Scenario completed successfully');
             } else {
                 $this->reportProgress($scenario->getName(), 'Scenario completed with errors');
             }
-            
+
             return $result;
         } catch (\Exception $e) {
             $result = new ScenarioResult($scenario->getName());
-            $result->addError('Exception: ' . $e->getMessage());
-            
+            $result->addError('Exception: '.$e->getMessage());
+
             Log::error('Scenario failed', [
                 'scenario' => $scenario->getName(),
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $result;
         }
     }
@@ -259,25 +272,26 @@ class ScenarioRunner
     protected function runDryRun(ScenarioInterface $scenario, array $options): ScenarioResult
     {
         $result = new ScenarioResult($scenario->getName());
-        
+
         // Validate without running
-        if (!$scenario->validate()) {
+        if (! $scenario->validate()) {
             foreach ($scenario->getValidationErrors() as $error) {
                 $result->addError($error);
             }
+
             return $result;
         }
 
         // Get estimates
         $estimates = $scenario->estimate();
-        
+
         $result->addStatistic('dry_run', true);
         $result->addStatistic('estimated_records', $estimates['total_records'] ?? 0);
         $result->addStatistic('estimated_time', $estimates['estimated_time'] ?? 'Unknown');
         $result->addStatistic('estimated_memory', $estimates['estimated_memory'] ?? 'Unknown');
-        
+
         $this->reportProgress($scenario->getName(), 'Dry run completed');
-        
+
         return $result;
     }
 
@@ -313,7 +327,7 @@ class ScenarioRunner
     public function list(): array
     {
         $list = [];
-        
+
         foreach ($this->scenarios as $name => $scenario) {
             $list[$name] = [
                 'name' => $scenario->getName(),
@@ -323,7 +337,7 @@ class ScenarioRunner
                 'parameters' => $scenario->getParameters(),
             ];
         }
-        
+
         return $list;
     }
 
@@ -361,7 +375,7 @@ class ScenarioRunner
             $summary['total_time'] += $result->getExecutionTime();
         }
 
-        $summary['total_time'] = round($summary['total_time'], 2) . 's';
+        $summary['total_time'] = round($summary['total_time'], 2).'s';
 
         return $summary;
     }

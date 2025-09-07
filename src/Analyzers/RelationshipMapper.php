@@ -2,17 +2,20 @@
 
 namespace LaravelMint\Analyzers;
 
-use LaravelMint\Mint;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use LaravelMint\Mint;
 use ReflectionClass;
 use ReflectionMethod;
 
 class RelationshipMapper
 {
     protected Mint $mint;
+
     protected array $visitedModels = [];
+
     protected array $relationshipMap = [];
+
     protected array $dependencyGraph = [];
 
     public function __construct(Mint $mint)
@@ -22,12 +25,12 @@ class RelationshipMapper
 
     public function map(string $modelClass, int $depth = 0): array
     {
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
         }
 
         $maxDepth = $this->mint->getConfig('analysis.max_depth', 10);
-        
+
         if ($depth >= $maxDepth) {
             return [
                 'warning' => "Maximum relationship depth ({$maxDepth}) reached",
@@ -44,7 +47,7 @@ class RelationshipMapper
         }
 
         $this->visitedModels[] = $modelClass;
-        
+
         $relationships = $this->discoverRelationships($modelClass);
         $dependencies = $this->analyzeDependencies($modelClass, $relationships);
         $order = $this->calculateGenerationOrder($modelClass, $relationships);
@@ -59,10 +62,10 @@ class RelationshipMapper
 
         // Recursively map related models
         foreach ($relationships as $relationName => $relationData) {
-            if (isset($relationData['related_model']) && 
-                !in_array($relationData['related_model'], $this->visitedModels)) {
+            if (isset($relationData['related_model']) &&
+                ! in_array($relationData['related_model'], $this->visitedModels)) {
                 $result['relationships'][$relationName]['nested'] = $this->map(
-                    $relationData['related_model'], 
+                    $relationData['related_model'],
                     $depth + 1
                 );
             }
@@ -88,7 +91,7 @@ class RelationshipMapper
             try {
                 // Try to determine if this is a relationship method
                 $relationData = $this->analyzeMethod($instance, $method);
-                
+
                 if ($relationData !== null) {
                     $relationships[$method->getName()] = $relationData;
                 }
@@ -113,22 +116,22 @@ class RelationshipMapper
     protected function analyzeMethod(Model $instance, ReflectionMethod $method): ?array
     {
         $returnType = $method->getReturnType();
-        
-        if (!$returnType || $returnType->isBuiltin()) {
+
+        if (! $returnType || $returnType->isBuiltin()) {
             return null;
         }
 
         $typeName = $returnType->getName();
-        
-        if (!$this->isRelationClass($typeName)) {
+
+        if (! $this->isRelationClass($typeName)) {
             return null;
         }
 
         // Get the actual relation instance to extract more details
         try {
             $relation = $method->invoke($instance);
-            
-            if (!$relation instanceof Relation) {
+
+            if (! $relation instanceof Relation) {
                 return null;
             }
 
@@ -162,21 +165,21 @@ class RelationshipMapper
                 $data['owner_key'] = $relation->getOwnerKeyName();
                 $data['required'] = true; // BelongsTo typically means this is required
                 break;
-                
+
             case 'hasOne':
             case 'hasMany':
                 $data['foreign_key'] = $relation->getForeignKeyName();
                 $data['local_key'] = $relation->getLocalKeyName();
                 $data['required'] = false;
                 break;
-                
+
             case 'belongsToMany':
                 $data['pivot_table'] = $relation->getTable();
                 $data['foreign_pivot_key'] = $relation->getForeignPivotKeyName();
                 $data['related_pivot_key'] = $relation->getRelatedPivotKeyName();
                 $data['required'] = false;
                 break;
-                
+
             case 'hasManyThrough':
             case 'hasOneThrough':
                 $data['through_model'] = get_class($relation->getParent());
@@ -184,14 +187,14 @@ class RelationshipMapper
                 $data['second_key'] = $relation->getSecondLocalKeyName();
                 $data['required'] = false;
                 break;
-                
+
             case 'morphTo':
                 $data['morph_type'] = $relation->getMorphType();
                 $data['foreign_key'] = $relation->getForeignKeyName();
                 $data['polymorphic'] = true;
                 $data['required'] = false;
                 break;
-                
+
             case 'morphOne':
             case 'morphMany':
                 $data['morph_name'] = $relation->getMorphClass();
@@ -200,7 +203,7 @@ class RelationshipMapper
                 $data['polymorphic'] = true;
                 $data['required'] = false;
                 break;
-                
+
             case 'morphToMany':
             case 'morphedByMany':
                 $data['pivot_table'] = $relation->getTable();
@@ -226,7 +229,7 @@ class RelationshipMapper
         ];
 
         foreach ($relationships as $relationName => $relationData) {
-            if (!isset($relationData['related_model'])) {
+            if (! isset($relationData['related_model'])) {
                 continue;
             }
 
@@ -275,7 +278,7 @@ class RelationshipMapper
 
         foreach ($relationships as $relationData) {
             $type = $relationData['type'] ?? '';
-            
+
             if ($type === 'belongsTo') {
                 $hasBelongsTo = true;
                 $order['priority'] += 10; // Increase priority for each dependency
@@ -309,7 +312,7 @@ class RelationshipMapper
     {
         // Simple check for self-referencing relationships
         foreach ($relationships as $relationData) {
-            if (isset($relationData['related_model']) && 
+            if (isset($relationData['related_model']) &&
                 $relationData['related_model'] === $modelClass) {
                 return true;
             }
@@ -342,7 +345,7 @@ class RelationshipMapper
     {
         $className = get_class($relation);
         $baseName = class_basename($className);
-        
+
         // Convert class name to snake_case
         return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', lcfirst($baseName)));
     }
@@ -437,7 +440,7 @@ class RelationshipMapper
     public function buildDependencyGraph(array $models): array
     {
         $graph = [];
-        
+
         foreach ($models as $model) {
             $this->visitedModels = [];
             $mapping = $this->map($model);
@@ -454,7 +457,7 @@ class RelationshipMapper
         $visiting = [];
 
         foreach (array_keys($graph) as $node) {
-            if (!isset($visited[$node])) {
+            if (! isset($visited[$node])) {
                 $this->topologicalSortVisit($node, $graph, $visited, $visiting, $sorted);
             }
         }
@@ -463,10 +466,10 @@ class RelationshipMapper
     }
 
     protected function topologicalSortVisit(
-        string $node, 
-        array &$graph, 
-        array &$visited, 
-        array &$visiting, 
+        string $node,
+        array &$graph,
+        array &$visited,
+        array &$visiting,
         array &$sorted
     ): void {
         $visiting[$node] = true;
@@ -474,13 +477,13 @@ class RelationshipMapper
         if (isset($graph[$node]['dependencies']['required'])) {
             foreach ($graph[$node]['dependencies']['required'] as $dependency) {
                 $depModel = $dependency['model'];
-                
+
                 if (isset($visiting[$depModel])) {
                     // Circular dependency detected
                     continue;
                 }
-                
-                if (!isset($visited[$depModel])) {
+
+                if (! isset($visited[$depModel])) {
                     $this->topologicalSortVisit($depModel, $graph, $visited, $visiting, $sorted);
                 }
             }

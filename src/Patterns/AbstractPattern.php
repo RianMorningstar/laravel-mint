@@ -8,22 +8,27 @@ use Faker\Generator as FakerGenerator;
 abstract class AbstractPattern implements PatternInterface
 {
     protected array $config = [];
+
     protected FakerGenerator $faker;
+
     protected string $name;
+
     protected string $description;
+
     protected array $parameters = [];
+
     protected ?int $seed = null;
 
     public function __construct(array $config = [])
     {
         $this->config = $config;
         $this->seed = $config['seed'] ?? null;
-        
+
         $this->faker = FakerFactory::create();
         if ($this->seed !== null) {
             $this->faker->seed($this->seed);
         }
-        
+
         $this->initialize();
     }
 
@@ -38,11 +43,11 @@ abstract class AbstractPattern implements PatternInterface
     public function validate(array $config): bool
     {
         foreach ($this->getRequiredParameters() as $param) {
-            if (!isset($config[$param])) {
+            if (! isset($config[$param])) {
                 return false;
             }
         }
-        
+
         return $this->validateSpecific($config);
     }
 
@@ -92,7 +97,7 @@ abstract class AbstractPattern implements PatternInterface
     public function setConfig(array $config): void
     {
         $this->config = array_merge($this->config, $config);
-        
+
         if (isset($config['seed'])) {
             $this->seed = $config['seed'];
             $this->faker->seed($this->seed);
@@ -123,11 +128,11 @@ abstract class AbstractPattern implements PatternInterface
         if ($min !== null && $value < $min) {
             return $min;
         }
-        
+
         if ($max !== null && $value > $max) {
             return $max;
         }
-        
+
         return $value;
     }
 }

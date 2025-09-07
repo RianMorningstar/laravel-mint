@@ -3,21 +3,28 @@
 namespace LaravelMint\Scenarios;
 
 use LaravelMint\Mint;
-use LaravelMint\Patterns\PatternRegistry;
 
 class ScenarioBuilder
 {
     protected Mint $mint;
+
     protected string $name;
+
     protected array $config = [];
+
     protected array $models = [];
+
     protected array $segments = [];
+
     protected array $timeline = [];
+
     protected array $behaviors = [];
+
     protected array $patterns = [];
+
     protected array $relationships = [];
 
-    public function __construct(Mint $mint = null)
+    public function __construct(?Mint $mint = null)
     {
         $this->mint = $mint ?? app('mint');
     }
@@ -27,8 +34,9 @@ class ScenarioBuilder
      */
     public static function create(string $name): self
     {
-        $builder = new self();
+        $builder = new self;
         $builder->name = $name;
+
         return $builder;
     }
 
@@ -42,6 +50,7 @@ class ScenarioBuilder
             'count' => $count,
             'segments' => [],
         ];
+
         return $this;
     }
 
@@ -50,7 +59,7 @@ class ScenarioBuilder
      */
     public function segment(string $name, float $percentage, array $attributes = []): self
     {
-        if (!isset($this->models['users'])) {
+        if (! isset($this->models['users'])) {
             throw new \RuntimeException('Must call withUsers() before adding segments');
         }
 
@@ -73,6 +82,7 @@ class ScenarioBuilder
             'count' => $count,
             'categories' => [],
         ];
+
         return $this;
     }
 
@@ -81,7 +91,7 @@ class ScenarioBuilder
      */
     public function category(string $name, float $percentage, array $attributes = []): self
     {
-        if (!isset($this->models['products'])) {
+        if (! isset($this->models['products'])) {
             throw new \RuntimeException('Must call withProducts() before adding categories');
         }
 
@@ -102,6 +112,7 @@ class ScenarioBuilder
             'model' => 'App\\Models\\Order',
             'count' => $count,
         ];
+
         return $this;
     }
 
@@ -115,6 +126,7 @@ class ScenarioBuilder
             'end' => $end instanceof \DateTimeInterface ? $end : new \DateTime($end),
             'pattern' => 'linear',
         ];
+
         return $this;
     }
 
@@ -129,6 +141,7 @@ class ScenarioBuilder
 
         $this->timeline['pattern'] = $pattern;
         $this->timeline['pattern_config'] = $config;
+
         return $this;
     }
 
@@ -145,6 +158,7 @@ class ScenarioBuilder
             'date' => $date instanceof \DateTimeInterface ? $date : new \DateTime($date),
             'multiplier' => $multiplier,
         ];
+
         return $this;
     }
 
@@ -157,6 +171,7 @@ class ScenarioBuilder
             'rate' => $rate,
             'config' => $config,
         ];
+
         return $this;
     }
 
@@ -165,7 +180,7 @@ class ScenarioBuilder
      */
     public function withPattern(string $model, string $field, $pattern): self
     {
-        if (!isset($this->patterns[$model])) {
+        if (! isset($this->patterns[$model])) {
             $this->patterns[$model] = [];
         }
 
@@ -191,6 +206,7 @@ class ScenarioBuilder
             'type' => $type,
             'config' => $config,
         ];
+
         return $this;
     }
 
@@ -200,6 +216,7 @@ class ScenarioBuilder
     public function set(string $key, $value): self
     {
         data_set($this->config, $key, $value);
+
         return $this;
     }
 
@@ -227,6 +244,7 @@ class ScenarioBuilder
     {
         $config = $this->build();
         $scenario = new CustomScenario($this->mint, $config);
+
         return $scenario->run();
     }
 
@@ -237,6 +255,7 @@ class ScenarioBuilder
     {
         $config = $this->build();
         $json = json_encode($config, JSON_PRETTY_PRINT);
+
         return file_put_contents($path, $json) !== false;
     }
 
@@ -245,17 +264,17 @@ class ScenarioBuilder
      */
     public static function load(string $path): self
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new \RuntimeException("Scenario file not found: {$path}");
         }
 
         $config = json_decode(file_get_contents($path), true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException('Invalid JSON in scenario file: ' . json_last_error_msg());
+            throw new \RuntimeException('Invalid JSON in scenario file: '.json_last_error_msg());
         }
 
-        $builder = new self();
+        $builder = new self;
         $builder->name = $config['name'] ?? 'unnamed';
         $builder->models = $config['models'] ?? [];
         $builder->segments = $config['segments'] ?? [];
@@ -286,7 +305,7 @@ class CustomScenario extends BaseScenario
     {
         $this->name = $this->builderConfig['name'] ?? 'Custom Scenario';
         $this->description = 'Scenario created with ScenarioBuilder';
-        
+
         // Extract required models
         foreach ($this->builderConfig['models'] as $key => $modelConfig) {
             if (isset($modelConfig['model'])) {
@@ -312,24 +331,24 @@ class CustomScenario extends BaseScenario
     {
         $modelClass = $modelConfig['model'];
         $count = $modelConfig['count'];
-        
+
         // Handle segments
-        if (!empty($modelConfig['segments'])) {
+        if (! empty($modelConfig['segments'])) {
             $this->generateWithSegments($modelClass, $count, $modelConfig['segments']);
         }
         // Handle categories
-        elseif (!empty($modelConfig['categories'])) {
+        elseif (! empty($modelConfig['categories'])) {
             $this->generateWithCategories($modelClass, $count, $modelConfig['categories']);
         }
         // Simple generation
         else {
             $options = $this->getGenerationOptions();
-            
+
             // Apply patterns if configured
             if (isset($this->builderConfig['patterns'][class_basename($modelClass)])) {
                 $options['column_patterns'] = $this->builderConfig['patterns'][class_basename($modelClass)];
             }
-            
+
             $this->generateModel($modelClass, $count, $options);
         }
     }
@@ -337,21 +356,21 @@ class CustomScenario extends BaseScenario
     protected function generateWithSegments(string $modelClass, int $totalCount, array $segments): void
     {
         foreach ($segments as $name => $segment) {
-            $segmentCount = (int)($totalCount * $segment['percentage']);
-            
+            $segmentCount = (int) ($totalCount * $segment['percentage']);
+
             $options = $this->getGenerationOptions();
             $options['segment'] = $name;
-            
+
             // Apply segment-specific patterns
-            if (!empty($segment['patterns'])) {
+            if (! empty($segment['patterns'])) {
                 $options['column_patterns'] = $segment['patterns'];
             }
-            
+
             // Apply segment attributes as overrides
-            if (!empty($segment['attributes'])) {
+            if (! empty($segment['attributes'])) {
                 $options['overrides'] = $segment['attributes'];
             }
-            
+
             $this->generateModel($modelClass, $segmentCount, $options);
         }
     }
@@ -359,16 +378,16 @@ class CustomScenario extends BaseScenario
     protected function generateWithCategories(string $modelClass, int $totalCount, array $categories): void
     {
         foreach ($categories as $name => $category) {
-            $categoryCount = (int)($totalCount * $category['percentage']);
-            
+            $categoryCount = (int) ($totalCount * $category['percentage']);
+
             $options = $this->getGenerationOptions();
             $options['category'] = $name;
-            
+
             // Apply category attributes
-            if (!empty($category['attributes'])) {
+            if (! empty($category['attributes'])) {
                 $options['overrides'] = $category['attributes'];
             }
-            
+
             $this->generateModel($modelClass, $categoryCount, $options);
         }
     }
@@ -376,7 +395,7 @@ class CustomScenario extends BaseScenario
     protected function applyBehavior(string $behavior, array $config): void
     {
         $rate = $config['rate'];
-        
+
         switch ($behavior) {
             case 'cart_abandonment':
                 $this->applyCartAbandonment($rate);

@@ -3,9 +3,9 @@
 namespace LaravelMint\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaravelMint\Scenarios\ScenarioRunner;
 use LaravelMint\Scenarios\Presets\EcommerceScenario;
 use LaravelMint\Scenarios\Presets\SaaSScenario;
+use LaravelMint\Scenarios\ScenarioRunner;
 
 class ScenarioRunCommand extends Command
 {
@@ -30,7 +30,7 @@ class ScenarioRunCommand extends Command
     {
         $scenarioName = $this->argument('scenario');
         $isDryRun = $this->option('dry-run');
-        $useTransaction = !$this->option('no-transaction');
+        $useTransaction = ! $this->option('no-transaction');
         $configOptions = $this->parseConfigOptions();
         $configFile = $this->option('file');
 
@@ -53,13 +53,14 @@ class ScenarioRunCommand extends Command
         // Handle custom scenario from file
         if ($scenarioName === 'custom' && $configFile) {
             $this->runCustomScenario($configFile, $configOptions);
+
             return 0;
         }
 
         // Run the scenario
         try {
             $this->info("Running scenario: {$scenarioName}");
-            
+
             if ($isDryRun) {
                 $this->warn('DRY RUN MODE - No data will be generated');
             }
@@ -73,14 +74,15 @@ class ScenarioRunCommand extends Command
         } catch (\InvalidArgumentException $e) {
             $this->error($e->getMessage());
             $this->displayAvailableScenarios();
+
             return 1;
         } catch (\Exception $e) {
-            $this->error('Scenario failed: ' . $e->getMessage());
-            
+            $this->error('Scenario failed: '.$e->getMessage());
+
             if ($this->option('verbose')) {
                 $this->error($e->getTraceAsString());
             }
-            
+
             return 1;
         }
     }
@@ -102,18 +104,19 @@ class ScenarioRunCommand extends Command
     protected function parseConfigOptions(): array
     {
         $config = [];
-        
+
         foreach ($this->option('config') as $option) {
             if (strpos($option, '=') === false) {
                 $this->warn("Invalid config option format: {$option}");
+
                 continue;
             }
 
             [$key, $value] = explode('=', $option, 2);
-            
+
             // Parse value type
             if (is_numeric($value)) {
-                $value = strpos($value, '.') !== false ? (float)$value : (int)$value;
+                $value = strpos($value, '.') !== false ? (float) $value : (int) $value;
             } elseif (in_array(strtolower($value), ['true', 'false'])) {
                 $value = strtolower($value) === 'true';
             }
@@ -126,19 +129,19 @@ class ScenarioRunCommand extends Command
 
     protected function loadConfigFile(string $path, array $overrides = []): array
     {
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             throw new \RuntimeException("Configuration file not found: {$path}");
         }
 
         $extension = pathinfo($path, PATHINFO_EXTENSION);
-        
-        $config = match($extension) {
+
+        $config = match ($extension) {
             'json' => json_decode(file_get_contents($path), true),
             'php' => require $path,
             default => throw new \RuntimeException("Unsupported config file format: {$extension}"),
         };
 
-        if (!is_array($config)) {
+        if (! is_array($config)) {
             throw new \RuntimeException('Configuration file must return an array');
         }
 
@@ -151,7 +154,7 @@ class ScenarioRunCommand extends Command
 
         // Use ScenarioBuilder to load and run
         $builder = \LaravelMint\Scenarios\ScenarioBuilder::load($path);
-        
+
         // Apply config overrides
         foreach ($config as $key => $value) {
             $builder->set($key, $value);
@@ -166,7 +169,7 @@ class ScenarioRunCommand extends Command
         $summary = $result->getSummary();
 
         $this->newLine();
-        
+
         if ($result->isSuccess()) {
             $this->info('✓ Scenario completed successfully');
         } else {
@@ -174,11 +177,11 @@ class ScenarioRunCommand extends Command
         }
 
         // Display statistics
-        if (!empty($summary['generated'])) {
+        if (! empty($summary['generated'])) {
             $this->info('Generated Records:');
             $this->table(
                 ['Model', 'Count'],
-                collect($summary['generated'])->map(fn($count, $model) => [
+                collect($summary['generated'])->map(fn ($count, $model) => [
                     class_basename($model),
                     number_format($count),
                 ])->toArray()
@@ -189,26 +192,26 @@ class ScenarioRunCommand extends Command
         $this->info('Performance:');
         $this->line("  Execution Time: {$summary['execution_time']}");
         $this->line("  Memory Usage: {$summary['memory_usage']}");
-        $this->line("  Total Records: " . number_format($summary['total_records']));
+        $this->line('  Total Records: '.number_format($summary['total_records']));
 
         // Display custom statistics
-        if (!empty($summary['statistics'])) {
+        if (! empty($summary['statistics'])) {
             $this->newLine();
             $this->info('Statistics:');
             foreach ($summary['statistics'] as $key => $value) {
                 if (is_array($value)) {
                     $this->line("  {$key}:");
                     foreach ($value as $subKey => $subValue) {
-                        $this->line("    {$subKey}: " . (is_numeric($subValue) ? number_format($subValue) : $subValue));
+                        $this->line("    {$subKey}: ".(is_numeric($subValue) ? number_format($subValue) : $subValue));
                     }
                 } else {
-                    $this->line("  {$key}: " . (is_numeric($value) ? number_format($value) : $value));
+                    $this->line("  {$key}: ".(is_numeric($value) ? number_format($value) : $value));
                 }
             }
         }
 
         // Display errors
-        if (!empty($summary['errors'])) {
+        if (! empty($summary['errors'])) {
             $this->newLine();
             $this->error('Errors:');
             foreach ($summary['errors'] as $error) {
@@ -221,9 +224,9 @@ class ScenarioRunCommand extends Command
     {
         $this->newLine();
         $this->info('Available scenarios:');
-        
+
         $scenarios = $this->runner->list();
-        
+
         foreach ($scenarios as $name => $info) {
             $this->line("  • {$name}: {$info['description']}");
         }

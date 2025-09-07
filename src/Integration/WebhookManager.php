@@ -10,21 +10,26 @@ use LaravelMint\Jobs\SendWebhookJob;
 class WebhookManager
 {
     protected array $webhooks = [];
+
     protected int $timeout = 30;
+
     protected int $retries = 3;
+
     protected int $retryDelay = 60;
+
     protected bool $verifySSL = true;
+
     protected ?string $secret = null;
-    
+
     /**
      * Register webhook
      */
     public function register(string $event, string $url, array $options = []): void
     {
-        if (!isset($this->webhooks[$event])) {
+        if (! isset($this->webhooks[$event])) {
             $this->webhooks[$event] = [];
         }
-        
+
         $this->webhooks[$event][] = [
             'url' => $url,
             'headers' => $options['headers'] ?? [],
@@ -33,21 +38,21 @@ class WebhookManager
             'transform' => $options['transform'] ?? null,
         ];
     }
-    
+
     /**
      * Trigger webhook for event
      */
     public function trigger(string $event, array $data): void
     {
-        if (!isset($this->webhooks[$event])) {
+        if (! isset($this->webhooks[$event])) {
             return;
         }
-        
+
         foreach ($this->webhooks[$event] as $webhook) {
             $this->send($webhook, $event, $data);
         }
     }
-    
+
     /**
      * Send webhook
      */
@@ -57,21 +62,21 @@ class WebhookManager
         if ($webhook['transform'] && is_callable($webhook['transform'])) {
             $data = call_user_func($webhook['transform'], $data);
         }
-        
+
         // Prepare payload
         $payload = [
             'event' => $event,
             'timestamp' => now()->toIso8601String(),
             'data' => $data,
         ];
-        
+
         // Add signature if secret is set
         $headers = $webhook['headers'];
         if ($this->secret) {
             $signature = $this->generateSignature($payload);
             $headers['X-Mint-Signature'] = $signature;
         }
-        
+
         // Send immediately or queue
         if ($webhook['retry']) {
             $this->queueWebhook($webhook['url'], $webhook['method'], $payload, $headers);
@@ -79,7 +84,7 @@ class WebhookManager
             $this->sendImmediate($webhook['url'], $webhook['method'], $payload, $headers);
         }
     }
-    
+
     /**
      * Send webhook immediately
      */
@@ -92,24 +97,24 @@ class WebhookManager
                     'verify' => $this->verifySSL,
                 ])
                 ->$method($url, $payload);
-            
+
             if ($response->successful()) {
                 Log::info('Webhook sent successfully', [
                     'url' => $url,
                     'event' => $payload['event'] ?? null,
                     'status' => $response->status(),
                 ]);
-                
+
                 return true;
             }
-            
+
             Log::warning('Webhook failed', [
                 'url' => $url,
                 'event' => $payload['event'] ?? null,
                 'status' => $response->status(),
                 'response' => $response->body(),
             ]);
-            
+
             return false;
         } catch (\Exception $e) {
             Log::error('Webhook exception', [
@@ -117,11 +122,11 @@ class WebhookManager
                 'event' => $payload['event'] ?? null,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return false;
         }
     }
-    
+
     /**
      * Queue webhook for delivery
      */
@@ -131,32 +136,33 @@ class WebhookManager
             ->onQueue('webhooks')
             ->delay(0);
     }
-    
+
     /**
      * Generate HMAC signature
      */
     protected function generateSignature(array $payload): string
     {
         $json = json_encode($payload);
-        return 'sha256=' . hash_hmac('sha256', $json, $this->secret);
+
+        return 'sha256='.hash_hmac('sha256', $json, $this->secret);
     }
-    
+
     /**
      * Verify webhook signature
      */
-    public function verifySignature(string $signature, array $payload, string $secret = null): bool
+    public function verifySignature(string $signature, array $payload, ?string $secret = null): bool
     {
         $secret = $secret ?? $this->secret;
-        
-        if (!$secret) {
+
+        if (! $secret) {
             return true; // No secret configured, skip verification
         }
-        
+
         $expectedSignature = $this->generateSignature($payload);
-        
+
         return hash_equals($expectedSignature, $signature);
     }
-    
+
     /**
      * Register CI/CD webhooks
      */
@@ -167,9 +173,9 @@ class WebhookManager
             $this->register('generation_complete', $config['github']['webhook_url'], [
                 'headers' => [
                     'X-GitHub-Event' => 'repository_dispatch',
-                    'Authorization' => 'token ' . $config['github']['token'],
+                    'Authorization' => 'token '.$config['github']['token'],
                 ],
-                'transform' => function ($data) use ($config) {
+                'transform' => function ($data) {
                     return [
                         'event_type' => 'mint_generation_complete',
                         'client_payload' => $data,
@@ -177,7 +183,7 @@ class WebhookManager
                 },
             ]);
         }
-        
+
         // GitLab CI
         if (isset($config['gitlab'])) {
             $this->register('generation_complete', $config['gitlab']['webhook_url'], [
@@ -195,14 +201,14 @@ class WebhookManager
                 },
             ]);
         }
-        
+
         // Jenkins
         if (isset($config['jenkins'])) {
             $this->register('generation_complete', $config['jenkins']['webhook_url'], [
                 'headers' => [
-                    'Authorization' => 'Basic ' . base64_encode($config['jenkins']['user'] . ':' . $config['jenkins']['token']),
+                    'Authorization' => 'Basic '.base64_encode($config['jenkins']['user'].':'.$config['jenkins']['token']),
                 ],
-                'transform' => function ($data) use ($config) {
+                'transform' => function ($data) {
                     return [
                         'parameter' => [
                             ['name' => 'MINT_EVENT', 'value' => 'generation_complete'],
@@ -212,7 +218,7 @@ class WebhookManager
                 },
             ]);
         }
-        
+
         // CircleCI
         if (isset($config['circleci'])) {
             $this->register('generation_complete', $config['circleci']['webhook_url'], [
@@ -232,7 +238,7 @@ class WebhookManager
             ]);
         }
     }
-    
+
     /**
      * Set webhook configuration
      */
@@ -241,23 +247,23 @@ class WebhookManager
         if (isset($config['timeout'])) {
             $this->timeout = $config['timeout'];
         }
-        
+
         if (isset($config['retries'])) {
             $this->retries = $config['retries'];
         }
-        
+
         if (isset($config['retry_delay'])) {
             $this->retryDelay = $config['retry_delay'];
         }
-        
+
         if (isset($config['verify_ssl'])) {
             $this->verifySSL = $config['verify_ssl'];
         }
-        
+
         if (isset($config['secret'])) {
             $this->secret = $config['secret'];
         }
-        
+
         if (isset($config['webhooks'])) {
             foreach ($config['webhooks'] as $event => $webhooks) {
                 foreach ($webhooks as $webhook) {
@@ -265,28 +271,28 @@ class WebhookManager
                 }
             }
         }
-        
+
         if (isset($config['cicd'])) {
             $this->registerCICD($config['cicd']);
         }
     }
-    
+
     /**
      * Get registered webhooks
      */
-    public function getWebhooks(string $event = null): array
+    public function getWebhooks(?string $event = null): array
     {
         if ($event) {
             return $this->webhooks[$event] ?? [];
         }
-        
+
         return $this->webhooks;
     }
-    
+
     /**
      * Clear webhooks
      */
-    public function clear(string $event = null): void
+    public function clear(?string $event = null): void
     {
         if ($event) {
             unset($this->webhooks[$event]);
@@ -294,7 +300,7 @@ class WebhookManager
             $this->webhooks = [];
         }
     }
-    
+
     /**
      * Test webhook
      */
@@ -307,7 +313,7 @@ class WebhookManager
                 'message' => 'This is a test webhook from Laravel Mint',
             ], $testData),
         ];
-        
+
         return $this->sendImmediate($url, 'POST', $payload);
     }
 }

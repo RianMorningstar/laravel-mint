@@ -7,6 +7,7 @@ use LaravelMint\Mint;
 class ScenarioManager
 {
     protected Mint $mint;
+
     protected array $scenarios = [];
 
     public function __construct(Mint $mint)
@@ -56,8 +57,8 @@ class ScenarioManager
     protected function discoverCustomScenarios(): void
     {
         $scenarioPath = $this->mint->getConfig('scenarios.path');
-        
-        if (!is_dir($scenarioPath)) {
+
+        if (! is_dir($scenarioPath)) {
             return;
         }
 
@@ -69,7 +70,7 @@ class ScenarioManager
      */
     public function run(string $scenario, array $options = []): void
     {
-        if (!isset($this->scenarios[$scenario])) {
+        if (! isset($this->scenarios[$scenario])) {
             throw new \InvalidArgumentException("Scenario '{$scenario}' not found");
         }
 
