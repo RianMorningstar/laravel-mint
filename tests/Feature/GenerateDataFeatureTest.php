@@ -227,6 +227,7 @@ class GenerateDataFeatureTest extends TestCase
         // Clear all records
         Artisan::call('mint:clear', [
             'model' => 'App\Models\Post',
+            '--force' => true,
         ]);
 
         $this->assertEquals(0, DB::table('posts')->count());
@@ -245,6 +246,7 @@ class GenerateDataFeatureTest extends TestCase
         Artisan::call('mint:clear', [
             'model' => 'App\Models\Post',
             '--where' => 'status=draft',
+            '--force' => true,
         ]);
 
         $this->assertEquals(1, DB::table('posts')->count());

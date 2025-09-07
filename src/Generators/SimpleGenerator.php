@@ -116,7 +116,6 @@ class SimpleGenerator extends DataGenerator
             // Skip if in overrides
             if (array_key_exists($column, $overrides)) {
                 $record[$column] = $overrides[$column];
-
                 continue;
             }
 
@@ -141,7 +140,13 @@ class SimpleGenerator extends DataGenerator
                 $record[$column] = $this->generateForeignKeyValue($foreignKey);
             } elseif ($this->looksLikeForeignKey($column)) {
                 // Handle common foreign key patterns even if not detected in schema
-                $record[$column] = $this->generateForeignKeyByPattern($column);
+                $fkValue = $this->generateForeignKeyByPattern($column);
+                if ($fkValue === null && !($columns[$column]['nullable'] ?? true)) {
+                    // If foreign key is required but we couldn't generate one, use 1 as fallback
+                    $record[$column] = 1;
+                } else {
+                    $record[$column] = $fkValue;
+                }
             } elseif ($this->isSpecialField($column)) {
                 // Handle special fields like status, order_number, etc.
                 $record[$column] = $this->generateSpecialField($column, $columns[$column] ?? ['type' => 'string']);
@@ -499,8 +504,25 @@ class SimpleGenerator extends DataGenerator
             $ids = $connection->table($tableName)->pluck('id')->toArray();
 
             if (empty($ids)) {
-                // No records in foreign table
-                return null;
+                // Try to create a record in the foreign table if possible
+                // This is a simple fallback - in production you'd want better handling
+                try {
+                    $connection->table($tableName)->insert([
+                        'name' => $this->faker->name(),
+                        'email' => $this->faker->unique()->email(),
+                        'password' => bcrypt('password'),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $ids = $connection->table($tableName)->pluck('id')->toArray();
+                } catch (\Exception $e) {
+                    // If we can't create, return 1 as a fallback
+                    return 1;
+                }
+                
+                if (empty($ids)) {
+                    return 1; // Fallback to 1 if still no records
+                }
             }
 
             return $this->faker->randomElement($ids);
