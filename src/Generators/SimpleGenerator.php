@@ -11,6 +11,8 @@ class SimpleGenerator extends DataGenerator
     protected array $generatedModels = [];
 
     protected array $relationshipCache = [];
+    
+    protected int $generatedCount = 0;
 
     /**
      * Generate data for a model
@@ -59,6 +61,7 @@ class SimpleGenerator extends DataGenerator
      */
     protected function generateRecord(string $modelClass, array $overrides = []): array
     {
+        $this->generatedCount++;
         $record = [];
         $modelAnalysis = $this->analysis['model'] ?? [];
         $schemaAnalysis = $this->analysis['schema'] ?? [];
@@ -151,9 +154,18 @@ class SimpleGenerator extends DataGenerator
                 // Handle special fields like status, order_number, etc.
                 $record[$column] = $this->generateSpecialField($column, $columns[$column] ?? ['type' => 'string']);
             } else {
-                // Generate normal column value
-                $columnDetails = $columns[$column] ?? ['type' => 'string', 'nullable' => false];
-                $record[$column] = $this->generateColumnValue($column, $columnDetails);
+                // Check if we should use a pattern for this field
+                $patternConfig = $this->options['pattern_config'] ?? [];
+                if (isset($this->options['pattern']) && 
+                    isset($patternConfig['field']) && 
+                    $patternConfig['field'] === $column) {
+                    // Generate value using pattern
+                    $record[$column] = $this->generatePatternValue($this->options['pattern'], $patternConfig);
+                } else {
+                    // Generate normal column value
+                    $columnDetails = $columns[$column] ?? ['type' => 'string', 'nullable' => false];
+                    $record[$column] = $this->generateColumnValue($column, $columnDetails);
+                }
             }
         }
 
@@ -532,6 +544,48 @@ class SimpleGenerator extends DataGenerator
         }
     }
 
+    /**
+     * Generate value using a pattern
+     */
+    protected function generatePatternValue(string $pattern, array $config): mixed
+    {
+        // Handle normal distribution pattern
+        if ($pattern === 'normal' || $pattern === 'distribution.normal') {
+            $mean = $config['mean'] ?? 100;
+            $stddev = $config['stddev'] ?? 20;
+            
+            // Generate a normal distribution value using Box-Muller transform
+            $u = $this->faker->randomFloat(4, 0.0001, 0.9999);
+            $v = $this->faker->randomFloat(4, 0.0001, 0.9999);
+            $z = sqrt(-2.0 * log($u)) * cos(2.0 * pi() * $v);
+            
+            return round($mean + ($z * $stddev), 2);
+        }
+        
+        // Handle exponential pattern
+        if ($pattern === 'exponential' || $pattern === 'distribution.exponential') {
+            $lambda = $config['lambda'] ?? 1.0;
+            $u = $this->faker->randomFloat(4, 0.0001, 0.9999);
+            return round(-log(1 - $u) / $lambda, 2);
+        }
+        
+        // Handle seasonal pattern
+        if ($pattern === 'seasonal' || $pattern === 'temporal.seasonal') {
+            $base = $config['base'] ?? 100;
+            $amplitude = $config['amplitude'] ?? 50;
+            $period = $config['period'] ?? 12;
+            
+            // Use current index as time
+            $time = $this->generatedCount ?? 0;
+            $value = $base + $amplitude * sin(2 * pi() * $time / $period);
+            
+            return round($value, 2);
+        }
+        
+        // Default to random value
+        return $this->faker->randomFloat(2, 10, 1000);
+    }
+    
     /**
      * Check if field needs special handling
      */
