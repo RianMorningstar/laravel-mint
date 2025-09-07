@@ -101,10 +101,18 @@ class ModelAnalyzerTest extends TestCase
             'optional_field' => 'string',
         ]);
 
-        // Mark optional_field as nullable in schema
-        Schema::table('nullabletests', function ($table) {
-            $table->string('optional_field')->nullable()->change();
-        });
+        // Both fields are created as nullable by TestModelFactory
+        // Let's change required_field to NOT NULL
+        $connection = app('db')->connection();
+        $connection->statement('CREATE TABLE nullabletests_new AS SELECT * FROM nullabletests WHERE 0');
+        $connection->statement('DROP TABLE nullabletests');
+        $connection->statement('CREATE TABLE nullabletests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            required_field VARCHAR(255) NOT NULL,
+            optional_field VARCHAR(255),
+            created_at DATETIME,
+            updated_at DATETIME
+        )');
 
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
