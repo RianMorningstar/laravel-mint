@@ -17,10 +17,20 @@ class ScenarioResult
     protected int $memoryUsage = 0;
 
     protected bool $success = true;
+    
+    protected array $data = [];
 
-    public function __construct(string $scenario)
+    public function __construct($scenarioOrSuccess = '', ?array $data = null)
     {
-        $this->scenario = $scenario;
+        // Support both constructor signatures for backward compatibility
+        if (is_bool($scenarioOrSuccess)) {
+            $this->success = $scenarioOrSuccess;
+            $this->data = $data ?? [];
+            $this->scenario = 'unknown';
+        } else {
+            $this->scenario = $scenarioOrSuccess;
+            $this->data = $data ?? [];
+        }
     }
 
     public function addGenerated(string $model, int $count): void
@@ -54,6 +64,14 @@ class ScenarioResult
         return $this->success && empty($this->errors);
     }
 
+    /**
+     * Alias for isSuccess() for backward compatibility
+     */
+    public function isSuccessful(): bool
+    {
+        return $this->isSuccess();
+    }
+
     public function getGenerated(): array
     {
         return $this->generated;
@@ -77,6 +95,23 @@ class ScenarioResult
     public function getMemoryUsage(): int
     {
         return $this->memoryUsage;
+    }
+
+    /**
+     * Get data array for tests
+     */
+    public function getData(): array
+    {
+        return array_merge($this->data, [
+            'generated' => $this->generated,
+            'statistics' => $this->statistics,
+            'errors' => $this->errors,
+            'error' => !empty($this->errors) ? $this->errors[0] : null,
+            'records' => $this->getTotalGenerated(),
+            'duration' => $this->executionTime,
+            'memory' => $this->memoryUsage,
+            'records_created' => $this->getTotalGenerated(),
+        ]);
     }
 
     public function getTotalGenerated(): int

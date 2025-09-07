@@ -316,7 +316,7 @@ class DataGeneratorTest extends TestCase
             'relationships' => [],
         ];
         
-        $generator = new SimpleGenerator($this->mint, $analysis);
+        $generator = new TestableDataGenerator($this->mint, $analysis);
 
         $value = $generator->generateFieldValue('string', 'address');
 

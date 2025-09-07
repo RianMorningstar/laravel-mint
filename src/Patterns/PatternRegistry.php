@@ -256,4 +256,88 @@ class PatternRegistry
 
         return array_unique($categories);
     }
+
+    /**
+     * Remove a pattern from the registry
+     */
+    public function remove(string $name): void
+    {
+        $patternName = $this->resolvePattern($name);
+        
+        if ($patternName) {
+            unset($this->patterns[$patternName]);
+            
+            // Remove any aliases pointing to this pattern
+            $this->aliases = array_filter($this->aliases, function($target) use ($patternName) {
+                return $target !== $patternName;
+            });
+        }
+    }
+
+    /**
+     * Load patterns from configuration
+     */
+    public function loadFromConfig(): void
+    {
+        // This would load patterns from a configuration file
+        // For now, it's a placeholder that does nothing
+        // since we're already loading built-in patterns in the constructor
+    }
+
+    /**
+     * Register a pattern factory
+     */
+    public function registerFactory(string $name, callable $factory): void
+    {
+        $this->patterns[$name] = new class($factory) implements PatternInterface {
+            private $factory;
+            
+            public function __construct(callable $factory)
+            {
+                $this->factory = $factory;
+            }
+            
+            public function apply(array $data, array $config = []): array
+            {
+                $pattern = ($this->factory)($config);
+                return $pattern->apply($data, $config);
+            }
+            
+            public function generate(array $context = []): mixed
+            {
+                $pattern = ($this->factory)([]);
+                return $pattern->generate($context);
+            }
+            
+            public function validate(array $config): bool
+            {
+                return true;
+            }
+            
+            public function setConfig(array $config): void
+            {
+                // Config is passed to factory when creating pattern
+            }
+            
+            public function reset(): void
+            {
+                // No state to reset
+            }
+            
+            public function getName(): string
+            {
+                return 'factory-pattern';
+            }
+            
+            public function getDescription(): string
+            {
+                return 'Pattern created by factory';
+            }
+            
+            public function getParameters(): array
+            {
+                return [];
+            }
+        };
+    }
 }

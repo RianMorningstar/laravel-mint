@@ -115,4 +115,76 @@ class ScenarioManager
     {
         $this->scenarios[$key] = $config;
     }
+
+    /**
+     * Register a new scenario (alias for registerScenario for compatibility)
+     */
+    public function register(string $name, $scenario): void
+    {
+        if (is_object($scenario)) {
+            $this->scenarios[$name] = [
+                'name' => $name,
+                'description' => method_exists($scenario, 'getDescription') ? $scenario->getDescription() : '',
+                'instance' => $scenario,
+            ];
+        } else {
+            $this->scenarios[$name] = $scenario;
+        }
+    }
+
+    /**
+     * Check if a scenario exists
+     */
+    public function has(string $name): bool
+    {
+        return isset($this->scenarios[$name]);
+    }
+
+    /**
+     * Get a scenario
+     */
+    public function get(string $name): ?ScenarioInterface
+    {
+        if (!$this->has($name)) {
+            return null;
+        }
+
+        $scenario = $this->scenarios[$name];
+        
+        if (isset($scenario['instance'])) {
+            return $scenario['instance'];
+        }
+        
+        if (isset($scenario['class']) && class_exists($scenario['class'])) {
+            return new $scenario['class']($this->mint);
+        }
+        
+        return null;
+    }
+
+    /**
+     * List all scenarios
+     */
+    public function list(): array
+    {
+        return array_keys($this->scenarios);
+    }
+
+    /**
+     * Load scenarios from configuration
+     */
+    public function loadFromConfig(): void
+    {
+        $configScenarios = $this->mint->getConfig('scenarios', []);
+        
+        foreach ($configScenarios as $name => $config) {
+            if (isset($config['enabled']) && !$config['enabled']) {
+                continue;
+            }
+            
+            if (isset($config['class']) && class_exists($config['class'])) {
+                $this->scenarios[$name] = $config;
+            }
+        }
+    }
 }
