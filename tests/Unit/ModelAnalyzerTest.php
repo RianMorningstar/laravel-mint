@@ -116,9 +116,13 @@ class ModelAnalyzerTest extends TestCase
             'optional_field' => 'string',
         ]);
         
+        // Get Mint's connection to ensure we're using the same one
+        $connection = $this->mint->getConnection();
+        $schemaBuilder = $connection->getSchemaBuilder();
+        
         // Now modify the table structure to make one field nullable and one not
-        Schema::dropIfExists('nullabletests');
-        Schema::create('nullabletests', function ($table) {
+        $schemaBuilder->dropIfExists('nullabletests');
+        $schemaBuilder->create('nullabletests', function ($table) {
             $table->id();
             $table->string('required_field');  // NOT NULL by default
             $table->string('optional_field')->nullable();  // Explicitly nullable
@@ -128,10 +132,9 @@ class ModelAnalyzerTest extends TestCase
         // Clear any cache
         \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
         
-        // Verify table exists and has columns
-        $connection = app('db')->connection();
-        $this->assertTrue(Schema::hasTable('nullabletests'), 'Table nullabletests should exist');
-        $columnNames = Schema::getColumnListing('nullabletests');
+        // Verify table exists and has columns using Mint's connection
+        $this->assertTrue($schemaBuilder->hasTable('nullabletests'), 'Table nullabletests should exist');
+        $columnNames = $schemaBuilder->getColumnListing('nullabletests');
         $this->assertNotEmpty($columnNames, 'Table should have columns. Got: ' . json_encode($columnNames));
         
         // Check if Mint uses the same connection
@@ -166,16 +169,24 @@ class ModelAnalyzerTest extends TestCase
 
     public function test_detect_unique_constraints()
     {
+        // Get Mint's connection first
+        $connection = $this->mint->getConnection();
+        $schemaBuilder = $connection->getSchemaBuilder();
+        
+        // Create the table with unique constraints
+        $schemaBuilder->dropIfExists('uniquetests');
+        $schemaBuilder->create('uniquetests', function ($table) {
+            $table->id();
+            $table->string('email')->unique();
+            $table->string('username')->unique();
+            $table->timestamps();
+        });
+        
+        // Now create the model class
         $modelClass = TestModelFactory::create('UniqueTest', [
             'email' => 'string',
             'username' => 'string',
         ]);
-
-        // Add unique index
-        Schema::table('uniquetests', function ($table) {
-            $table->unique('email');
-            $table->unique('username');
-        });
 
         // Clear cache after schema change
         \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
@@ -194,10 +205,17 @@ class ModelAnalyzerTest extends TestCase
             'count' => 'integer',
         ]);
 
-        // Set defaults
-        Schema::table('defaulttests', function ($table) {
-            $table->string('status')->default('active')->change();
-            $table->integer('count')->default(0)->change();
+        // Get Mint's connection to ensure we're using the same one
+        $connection = $this->mint->getConnection();
+        $schemaBuilder = $connection->getSchemaBuilder();
+        
+        // Recreate table with defaults since SQLite doesn't support ALTER COLUMN well
+        $schemaBuilder->dropIfExists('defaulttests');
+        $schemaBuilder->create('defaulttests', function ($table) {
+            $table->id();
+            $table->string('status')->default('active');
+            $table->integer('count')->default(0);
+            $table->timestamps();
         });
 
         // Clear cache after schema change
@@ -279,16 +297,27 @@ class ModelAnalyzerTest extends TestCase
 
     public function test_detect_indexes()
     {
+        // Get Mint's connection first
+        $connection = $this->mint->getConnection();
+        $schemaBuilder = $connection->getSchemaBuilder();
+        
+        // Create the table with indexes
+        $schemaBuilder->dropIfExists('indextests');
+        $schemaBuilder->create('indextests', function ($table) {
+            $table->id();
+            $table->string('email');
+            $table->string('status')->index();
+            $table->datetime('created_at')->nullable();
+            $table->datetime('updated_at')->nullable();
+            $table->index(['status', 'created_at']);
+        });
+        
+        // Now create the model class
         $modelClass = TestModelFactory::create('IndexTest', [
             'email' => 'string',
             'status' => 'string',
             'created_at' => 'datetime',
         ]);
-
-        Schema::table('indextests', function ($table) {
-            $table->index('status');
-            $table->index(['status', 'created_at']);
-        });
 
         // Clear cache after schema change
         \Illuminate\Support\Facades\Cache::forget("mint.analysis.{$modelClass}");
