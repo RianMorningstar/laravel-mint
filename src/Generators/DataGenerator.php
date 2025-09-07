@@ -25,7 +25,7 @@ abstract class DataGenerator
         $this->options = $options;
         
         // Initialize Faker with seed if provided
-        $seed = $this->mint->getConfig('development.seed');
+        $seed = $this->mint->getConfig('development.seed') ?? null;
         $this->faker = FakerFactory::create();
         
         if ($seed !== null) {
@@ -79,8 +79,23 @@ abstract class DataGenerator
     {
         $records = collect();
         
+        // Extract custom attributes from options
+        $customAttributes = [];
+        $skipKeys = [
+            'silent', 'chunk', 'pattern', 'patterns', 'with-relationships',
+            'field', 'column_patterns', 'model_patterns', 'use_patterns',
+            'with_relationships', 'mode', 'combination', 'weights'
+        ];
+        
+        foreach ($this->options as $key => $value) {
+            // Skip known option keys
+            if (!in_array($key, $skipKeys)) {
+                $customAttributes[$key] = $value;
+            }
+        }
+        
         for ($i = 0; $i < $size; $i++) {
-            $records->push($this->generateRecord($modelClass));
+            $records->push($this->generateRecord($modelClass, $customAttributes));
             $this->generatedCount++;
         }
         

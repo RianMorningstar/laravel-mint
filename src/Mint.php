@@ -37,14 +37,26 @@ class Mint
         $schemaAnalysis = $this->schemaInspector->inspect($modelClass);
         $relationships = $this->relationshipMapper->map($modelClass);
         
+        // Get the table name
+        $table = '';
+        try {
+            $instance = new $modelClass();
+            $table = $instance->getTable();
+        } catch (\Exception $e) {
+            // Default to pluralized lowercase model name
+            $table = strtolower(class_basename($modelClass)) . 's';
+        }
+        
         return [
             'model' => $modelAnalysis,
             'schema' => $schemaAnalysis,
             'relationships' => $relationships,
+            'table' => $table,
+            'attributes' => $schemaAnalysis['columns'] ?? [],
         ];
     }
 
-    public function generate(string $modelClass, int $count = 1, array $options = []): void
+    public function generate(string $modelClass, int $count = 1, array $options = []): \Illuminate\Support\Collection
     {
         $analysis = $this->analyze($modelClass);
         
@@ -55,13 +67,24 @@ class Mint
             $this->generator = new SimpleGenerator($this, $analysis);
         }
         
-        $this->generator->generate($modelClass, $count, $options);
+        return $this->generator->generate($modelClass, $count, $options);
     }
 
     public function generateWithScenario(string $scenario, array $options = []): void
     {
         $scenarioManager = new ScenarioManager($this);
         $scenarioManager->run($scenario, $options);
+    }
+    
+    public function generateBatch(array $batch): array
+    {
+        $results = [];
+        
+        foreach ($batch as $modelClass => $count) {
+            $results[$modelClass] = $this->generate($modelClass, $count);
+        }
+        
+        return $results;
     }
 
     public function clear(string $modelClass = null): int
@@ -109,7 +132,8 @@ class Mint
      */
     protected function hasPatterns(array $options): bool
     {
-        return isset($options['patterns']) || 
+        return isset($options['pattern']) ||
+               isset($options['patterns']) || 
                isset($options['column_patterns']) || 
                isset($options['model_patterns']) ||
                isset($options['use_patterns']);
@@ -120,6 +144,74 @@ class Mint
      */
     public function getPatternRegistry(): PatternRegistry
     {
+        // Return shared instance from container if available
+        if ($this->app->bound(PatternRegistry::class)) {
+            return $this->app->make(PatternRegistry::class);
+        }
+        
         return new PatternRegistry();
+    }
+    
+    public function generateWithPattern(string $modelClass, int $count, string $pattern, array $config = []): \Illuminate\Support\Collection
+    {
+        $options = array_merge($config, ['pattern' => $pattern]);
+        return $this->generate($modelClass, $count, $options);
+    }
+    
+    public function seed(string $seederClass): void
+    {
+        $seeder = new $seederClass();
+        $seeder->run();
+    }
+    
+    public function getStatistics(string $modelClass): array
+    {
+        $count = $modelClass::count();
+        $today = $modelClass::whereDate('created_at', today())->count();
+        
+        return [
+            'total_records' => $count,
+            'created_today' => $today,
+            'field_statistics' => [],
+        ];
+    }
+    
+    public function export(string $modelClass, string $path, string $format = 'json'): void
+    {
+        $data = $modelClass::all()->toArray();
+        
+        if ($format === 'json') {
+            file_put_contents($path, json_encode($data, JSON_PRETTY_PRINT));
+        } elseif ($format === 'csv') {
+            $fp = fopen($path, 'w');
+            if (!empty($data)) {
+                fputcsv($fp, array_keys($data[0]));
+                foreach ($data as $row) {
+                    fputcsv($fp, $row);
+                }
+            }
+            fclose($fp);
+        }
+    }
+    
+    public function import(string $modelClass, string $path, string $format = 'json'): array
+    {
+        if ($format === 'json') {
+            $data = json_decode(file_get_contents($path), true);
+            foreach ($data as $row) {
+                $modelClass::create($row);
+            }
+            return ['imported' => count($data)];
+        }
+        
+        return ['imported' => 0];
+    }
+    
+    public function runScenario(string $scenario, array $options = []): array
+    {
+        $scenarioManager = new ScenarioManager($this);
+        $result = $scenarioManager->run($scenario, $options);
+        
+        return $result->toArray();
     }
 }

@@ -1,0 +1,11 @@
+name,sku,description,price,stock,is_active
+"Laptop Pro 15","SKU-001","High-performance laptop with 15-inch display",1299.99,25,true
+"Wireless Mouse","SKU-002","Ergonomic wireless mouse with precision tracking",29.99,150,true
+"USB-C Hub","SKU-003","7-in-1 USB-C hub with multiple ports",49.99,75,true
+"Mechanical Keyboard","SKU-004","RGB mechanical keyboard with blue switches",149.99,40,true
+"Monitor 27\"","SKU-005","4K UHD monitor with HDR support",449.99,15,true
+"Webcam HD","SKU-006","1080p HD webcam with auto-focus",79.99,60,true
+"Desk Lamp","SKU-007","LED desk lamp with adjustable brightness",39.99,100,true
+"Phone Stand","SKU-008","Adjustable phone stand for desk",19.99,200,true
+"Cable Organizer","SKU-009","Cable management system for desk",14.99,150,false
+"Mouse Pad XL","SKU-010","Extended gaming mouse pad",24.99,80,true

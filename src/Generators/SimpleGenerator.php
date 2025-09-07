@@ -29,7 +29,13 @@ class SimpleGenerator extends DataGenerator
         $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass) {
             // Insert chunk into database
             $this->insertRecords($modelClass, $chunk);
-            $generated = $generated->merge($chunk);
+            
+            // Fetch the created models from database
+            // Get the IDs of the last inserted records
+            $insertedCount = count($chunk);
+            $models = $modelClass::orderBy('id', 'desc')->take($insertedCount)->get()->reverse()->values();
+            
+            $generated = $generated->merge($models);
             
             if (php_sapi_name() === 'cli') {
                 $this->updateProgress($current, $total);
@@ -57,6 +63,41 @@ class SimpleGenerator extends DataGenerator
         $modelAnalysis = $this->analysis['model'] ?? [];
         $schemaAnalysis = $this->analysis['schema'] ?? [];
         $columns = $schemaAnalysis['columns'] ?? [];
+        
+        // If no columns found in analysis, try to get them from the model
+        if (empty($columns)) {
+            try {
+                $instance = new $modelClass();
+                
+                // Check if model has a getSchemaColumns method (for test models)
+                if (method_exists($instance, 'getSchemaColumns')) {
+                    $schemaColumns = $instance->getSchemaColumns();
+                    foreach ($schemaColumns as $field => $type) {
+                        $columns[$field] = ['type' => $type, 'nullable' => true];
+                    }
+                } else {
+                    $fillable = $instance->getFillable();
+                    
+                    // If fillable is defined, use those columns
+                    if (!empty($fillable)) {
+                        foreach ($fillable as $field) {
+                            $columns[$field] = ['type' => 'string', 'nullable' => false];
+                        }
+                    } else {
+                        // Use some default columns
+                        $columns = [
+                            'name' => ['type' => 'string', 'nullable' => false],
+                            'value' => ['type' => 'integer', 'nullable' => true],
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                // Default fallback columns
+                $columns = [
+                    'name' => ['type' => 'string', 'nullable' => false],
+                ];
+            }
+        }
         
         // Get fillable fields
         $fillable = $modelAnalysis['fillable'] ?? [];
@@ -102,10 +143,11 @@ class SimpleGenerator extends DataGenerator
                 $record[$column] = $this->generateForeignKeyByPattern($column);
             } elseif ($this->isSpecialField($column)) {
                 // Handle special fields like status, order_number, etc.
-                $record[$column] = $this->generateSpecialField($column, $columns[$column]);
+                $record[$column] = $this->generateSpecialField($column, $columns[$column] ?? ['type' => 'string']);
             } else {
                 // Generate normal column value
-                $record[$column] = $this->generateColumnValue($column, $columns[$column]);
+                $columnDetails = $columns[$column] ?? ['type' => 'string', 'nullable' => false];
+                $record[$column] = $this->generateColumnValue($column, $columnDetails);
             }
         }
         

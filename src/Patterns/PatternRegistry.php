@@ -58,17 +58,25 @@ class PatternRegistry
     /**
      * Register a pattern
      */
-    public function register(string $name, string $className): void
+    public function register(string $name, $pattern): void
     {
-        if (!class_exists($className)) {
-            throw new \InvalidArgumentException("Pattern class {$className} does not exist");
+        if (is_string($pattern)) {
+            // Handle class name string
+            if (!class_exists($pattern)) {
+                throw new \InvalidArgumentException("Pattern class {$pattern} does not exist");
+            }
+            
+            if (!is_subclass_of($pattern, PatternInterface::class)) {
+                throw new \InvalidArgumentException("Pattern class {$pattern} must implement PatternInterface");
+            }
+            
+            $this->patterns[$name] = $pattern;
+        } elseif ($pattern instanceof PatternInterface) {
+            // Handle pattern object instance
+            $this->patterns[$name] = $pattern;
+        } else {
+            throw new \InvalidArgumentException("Pattern must be a class name string or PatternInterface instance");
         }
-        
-        if (!is_subclass_of($className, PatternInterface::class)) {
-            throw new \InvalidArgumentException("Pattern class {$className} must implement PatternInterface");
-        }
-        
-        $this->patterns[$name] = $className;
     }
 
     /**
@@ -94,8 +102,23 @@ class PatternRegistry
             throw new \InvalidArgumentException("Pattern {$name} is not registered");
         }
         
-        $className = $this->patterns[$patternName];
-        return new $className($config);
+        $pattern = $this->patterns[$patternName];
+        
+        // If it's already an instance, return it
+        if ($pattern instanceof PatternInterface) {
+            return $pattern;
+        }
+        
+        // Otherwise create new instance from class name
+        return new $pattern($config);
+    }
+    
+    /**
+     * Get a pattern (alias for create for compatibility)
+     */
+    public function get(string $name): PatternInterface
+    {
+        return $this->create($name);
     }
 
     /**
