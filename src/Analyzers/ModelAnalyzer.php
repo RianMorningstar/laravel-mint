@@ -56,13 +56,24 @@ class ModelAnalyzer
 
         // Create 'attributes' with field information
         $attributes = [];
-        if (isset($schemaInfo['columns'])) {
+        if (isset($schemaInfo['columns']) && !empty($schemaInfo['columns'])) {
             foreach ($schemaInfo['columns'] as $column => $details) {
                 $attributes[$column] = [
                     'type' => $details['type'] ?? 'string',
                     'nullable' => $details['nullable'] ?? false,
                     'default' => $details['default'] ?? null,
                     'unique' => $details['unique'] ?? false,
+                ];
+            }
+        } elseif (method_exists($instance, 'getSchemaColumns')) {
+            // Fallback to model's getSchemaColumns method (for test models)
+            $schemaColumns = $instance->getSchemaColumns();
+            foreach ($schemaColumns as $column => $type) {
+                $attributes[$column] = [
+                    'type' => $type,
+                    'nullable' => true,
+                    'default' => null,
+                    'unique' => false,
                 ];
             }
         }

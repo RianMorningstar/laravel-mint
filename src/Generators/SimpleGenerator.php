@@ -542,6 +542,7 @@ class SimpleGenerator extends DataGenerator
             'state',
             'type',
             'role',
+            'email',
             'password',
             'order_number',
             'invoice_number',
@@ -607,6 +608,11 @@ class SimpleGenerator extends DataGenerator
         // SKU fields
         if ($columnLower === 'sku') {
             return 'SKU-' . $this->faker->unique()->numberBetween(10000, 99999);
+        }
+        
+        // Email fields
+        if ($columnLower === 'email' || str_contains($columnLower, 'email')) {
+            return $this->faker->unique()->safeEmail();
         }
         
         // Password fields

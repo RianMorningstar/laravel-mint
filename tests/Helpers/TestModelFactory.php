@@ -28,6 +28,11 @@ class TestModelFactory
                 $table->id();
 
                 foreach ($attributes as $name => $type) {
+                    // Skip timestamp fields if they will be added by timestamps() method
+                    if (in_array($name, ['created_at', 'updated_at'])) {
+                        continue;
+                    }
+                    
                     switch ($type) {
                         case 'string':
                             $table->string($name)->nullable();

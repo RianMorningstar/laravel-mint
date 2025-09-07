@@ -79,7 +79,12 @@ class Mint
 
     public function generateWithScenario(string $scenario, array $options = []): void
     {
-        $scenarioManager = new ScenarioManager($this);
+        // Check if ScenarioManager is registered in the container (for testing)
+        if ($this->app && $this->app->has(ScenarioManager::class)) {
+            $scenarioManager = $this->app->make(ScenarioManager::class);
+        } else {
+            $scenarioManager = new ScenarioManager($this);
+        }
         $scenarioManager->run($scenario, $options);
     }
 

@@ -66,6 +66,7 @@ class ScenarioManagerTest extends TestCase
     {
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
+        $scenario->shouldReceive('getDescription')->andReturn('Test scenario');
 
         $this->manager->register('test-scenario', $scenario);
 
@@ -104,6 +105,7 @@ class ScenarioManagerTest extends TestCase
 
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
+        $scenario->shouldReceive('getDescription')->andReturn('Test scenario');
         $scenario->shouldReceive('run')->once()->andReturn($result);
 
         $this->manager->register('test-scenario', $scenario);
@@ -120,6 +122,7 @@ class ScenarioManagerTest extends TestCase
 
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('configurable');
+        $scenario->shouldReceive('getDescription')->andReturn('Configurable scenario');
         $scenario->shouldReceive('run')
             ->with($options)
             ->once()

@@ -83,9 +83,20 @@ class ModelAnalyzerTest extends TestCase
             'json_field' => 'json',
         ]);
 
+        // Check that table exists
+        $instance = new $modelClass;
+        $tableName = $instance->getTable();
+        $this->assertTrue(Schema::hasTable($tableName), "Table {$tableName} does not exist");
+        
+        // Check columns exist
+        $columns = Schema::getColumnListing($tableName);
+        $this->assertContains('string_field', $columns, 'Column string_field not found. Available columns: ' . implode(', ', $columns));
+        
         $analysis = $this->analyzer->analyze($modelClass);
         $attributes = $analysis['attributes'];
 
+        // Check that attributes exist
+        $this->assertArrayHasKey('string_field', $attributes, 'Missing string_field. Available: ' . implode(', ', array_keys($attributes)));
         $this->assertEquals('string', $attributes['string_field']['type']);
         $this->assertEquals('integer', $attributes['integer_field']['type']);
         $this->assertEquals('boolean', $attributes['boolean_field']['type']);
