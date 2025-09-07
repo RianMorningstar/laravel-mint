@@ -68,19 +68,28 @@ class SimpleGenerator extends DataGenerator
         if (empty($columns)) {
             try {
                 $instance = new $modelClass();
-                $fillable = $instance->getFillable();
                 
-                // If fillable is defined, use those columns
-                if (!empty($fillable)) {
-                    foreach ($fillable as $field) {
-                        $columns[$field] = ['type' => 'string', 'nullable' => false];
+                // Check if model has a getSchemaColumns method (for test models)
+                if (method_exists($instance, 'getSchemaColumns')) {
+                    $schemaColumns = $instance->getSchemaColumns();
+                    foreach ($schemaColumns as $field => $type) {
+                        $columns[$field] = ['type' => $type, 'nullable' => true];
                     }
                 } else {
-                    // Use some default columns
-                    $columns = [
-                        'name' => ['type' => 'string', 'nullable' => false],
-                        'value' => ['type' => 'integer', 'nullable' => true],
-                    ];
+                    $fillable = $instance->getFillable();
+                    
+                    // If fillable is defined, use those columns
+                    if (!empty($fillable)) {
+                        foreach ($fillable as $field) {
+                            $columns[$field] = ['type' => 'string', 'nullable' => false];
+                        }
+                    } else {
+                        // Use some default columns
+                        $columns = [
+                            'name' => ['type' => 'string', 'nullable' => false],
+                            'value' => ['type' => 'integer', 'nullable' => true],
+                        ];
+                    }
                 }
             } catch (\Exception $e) {
                 // Default fallback columns

@@ -81,9 +81,15 @@ abstract class DataGenerator
         
         // Extract custom attributes from options
         $customAttributes = [];
+        $skipKeys = [
+            'silent', 'chunk', 'pattern', 'patterns', 'with-relationships',
+            'field', 'column_patterns', 'model_patterns', 'use_patterns',
+            'with_relationships', 'mode', 'combination', 'weights'
+        ];
+        
         foreach ($this->options as $key => $value) {
             // Skip known option keys
-            if (!in_array($key, ['silent', 'chunk', 'pattern', 'patterns', 'with-relationships'])) {
+            if (!in_array($key, $skipKeys)) {
                 $customAttributes[$key] = $value;
             }
         }

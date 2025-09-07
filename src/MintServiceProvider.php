@@ -18,6 +18,7 @@ use LaravelMint\Scenarios\ScenarioRunner;
 use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\FactoryIntegration;
 use LaravelMint\Integration\WebhookManager;
+use LaravelMint\Patterns\PatternRegistry;
 
 class MintServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,10 @@ class MintServiceProvider extends ServiceProvider
 
         $this->app->singleton('mint', function ($app) {
             return new Mint($app);
+        });
+
+        $this->app->singleton(PatternRegistry::class, function ($app) {
+            return new PatternRegistry();
         });
 
         $this->app->singleton(ScenarioRunner::class, function ($app) {

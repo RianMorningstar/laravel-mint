@@ -104,6 +104,14 @@ class SeasonalPattern extends AbstractPattern implements TemporalPatternInterfac
     }
 
     /**
+     * Alias for generateAt for backwards compatibility
+     */
+    public function generateForDate(\DateTimeInterface $date): mixed
+    {
+        return $this->generateAt($date);
+    }
+
+    /**
      * Calculate seasonal component based on timestamp
      */
     protected function calculateSeasonalComponent(\DateTimeInterface $timestamp): float

@@ -5,12 +5,26 @@ namespace LaravelMint\Patterns;
 class CompositePattern extends AbstractPattern
 {
     protected array $patterns = [];
+    protected array $weights = [];
     protected string $mode = 'combine'; // combine, select, sequence
+    protected string $combination = 'additive'; // additive, multiplicative
 
-    public function __construct(array $patterns, array $config = [])
+    public function __construct($config = [], array $patterns = [])
     {
-        $this->patterns = $patterns;
-        parent::__construct($config);
+        // Handle both old and new constructor signatures
+        if (is_array($config)) {
+            if (isset($config['patterns'])) {
+                // New style: config array with patterns inside
+                $this->patterns = $config['patterns'];
+                $this->weights = $config['weights'] ?? [];
+                $this->combination = $config['combination'] ?? 'additive';
+                parent::__construct($config);
+            } else {
+                // Old style: patterns as first arg, config as second
+                $this->patterns = $config;
+                parent::__construct($patterns);
+            }
+        }
     }
 
     protected function initialize(): void
@@ -19,6 +33,8 @@ class CompositePattern extends AbstractPattern
         $this->description = 'Combines multiple patterns';
         
         $this->mode = $this->getConfig('mode', 'combine');
+        $this->combination = $this->getConfig('combination', $this->combination);
+        $this->weights = $this->getConfig('weights', $this->weights);
         
         $this->parameters = [
             'mode' => [
@@ -31,6 +47,12 @@ class CompositePattern extends AbstractPattern
                 'type' => 'array',
                 'description' => 'Weights for pattern selection (select mode)',
                 'default' => [],
+                'required' => false,
+            ],
+            'combination' => [
+                'type' => 'string',
+                'description' => 'How to combine patterns (additive, multiplicative)',
+                'default' => 'additive',
                 'required' => false,
             ],
         ];
@@ -55,17 +77,63 @@ class CompositePattern extends AbstractPattern
     }
 
     /**
+     * Generate for a specific date using temporal patterns
+     */
+    public function generateForDate(\DateTimeInterface $date): mixed
+    {
+        $context = ['timestamp' => $date];
+        
+        if ($this->combination === 'multiplicative') {
+            $result = 1.0;
+            foreach ($this->patterns as $i => $pattern) {
+                $weight = $this->weights[$i] ?? 1.0;
+                if ($pattern instanceof Temporal\TemporalPatternInterface) {
+                    $value = $pattern->generateAt($date);
+                } else {
+                    $value = $pattern->generate($context);
+                }
+                $result *= pow($value, $weight);
+            }
+            return $result;
+        } else {
+            // Additive combination
+            $result = 0;
+            foreach ($this->patterns as $i => $pattern) {
+                $weight = $this->weights[$i] ?? 1.0;
+                if ($pattern instanceof Temporal\TemporalPatternInterface) {
+                    $value = $pattern->generateAt($date);
+                } else {
+                    $value = $pattern->generate($context);
+                }
+                $result += $value * $weight;
+            }
+            return $result;
+        }
+    }
+
+    /**
      * Combine values from all patterns
      */
-    protected function generateCombine(array $context): array
+    protected function generateCombine(array $context): mixed
     {
-        $result = [];
-        
-        foreach ($this->patterns as $name => $pattern) {
-            $result[$name] = $pattern->generate($context);
+        if ($this->combination === 'multiplicative') {
+            $result = 1.0;
+            foreach ($this->patterns as $i => $pattern) {
+                $weight = $this->weights[$i] ?? 1.0;
+                $value = $pattern->generate($context);
+                $result *= pow($value, $weight);
+            }
+            return $result;
+        } else {
+            // Additive combination
+            $result = 0;
+            foreach ($this->patterns as $i => $pattern) {
+                $weight = $this->weights[$i] ?? 1.0;
+                $value = $pattern->generate($context);
+                $result += $value * $weight;
+            }
+            return $result;
         }
-        
-        return $result;
     }
 
     /**

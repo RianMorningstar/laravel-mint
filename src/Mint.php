@@ -132,7 +132,8 @@ class Mint
      */
     protected function hasPatterns(array $options): bool
     {
-        return isset($options['patterns']) || 
+        return isset($options['pattern']) ||
+               isset($options['patterns']) || 
                isset($options['column_patterns']) || 
                isset($options['model_patterns']) ||
                isset($options['use_patterns']);
@@ -143,6 +144,11 @@ class Mint
      */
     public function getPatternRegistry(): PatternRegistry
     {
+        // Return shared instance from container if available
+        if ($this->app->bound(PatternRegistry::class)) {
+            return $this->app->make(PatternRegistry::class);
+        }
+        
         return new PatternRegistry();
     }
     

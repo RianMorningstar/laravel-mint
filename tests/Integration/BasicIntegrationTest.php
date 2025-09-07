@@ -78,7 +78,7 @@ class BasicIntegrationTest extends TestCase
             class TestModel extends \Illuminate\Database\Eloquent\Model {
                 protected $table = "test_models";
                 protected $fillable = ["name", "value", "is_active"];
-                protected $casts = ["is_active" => "boolean"];
+                protected $casts = ["is_active" => "boolean", "value" => "integer"];
             }
         ');
         
@@ -93,7 +93,11 @@ class BasicIntegrationTest extends TestCase
         // Verify each record has expected fields
         foreach ($records as $record) {
             $this->assertNotEmpty($record->name);
-            $this->assertIsNumeric($record->value); // SQLite might return string for large integers
+            // Value should be numeric (integer or string representation of integer in SQLite)
+            $this->assertTrue(
+                is_numeric($record->value) || is_int($record->value),
+                "Value should be numeric, got: " . gettype($record->value) . " = " . var_export($record->value, true)
+            );
             $this->assertIsBool($record->is_active);
         }
     }

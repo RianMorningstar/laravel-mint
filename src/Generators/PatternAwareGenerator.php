@@ -16,7 +16,7 @@ class PatternAwareGenerator extends SimpleGenerator
     public function __construct(Mint $mint, array $analysis, array $options = [])
     {
         parent::__construct($mint, $analysis, $options);
-        $this->patternRegistry = new PatternRegistry();
+        $this->patternRegistry = $mint->getPatternRegistry();
         $this->loadPatterns();
     }
 
@@ -25,6 +25,20 @@ class PatternAwareGenerator extends SimpleGenerator
      */
     protected function loadPatterns(): void
     {
+        // Check if single pattern is specified
+        if (isset($this->options['pattern'])) {
+            $patternName = $this->options['pattern'];
+            $field = $this->options['field'] ?? null;
+            
+            if ($field) {
+                // Apply pattern to specific field
+                $this->columnPatterns[$field] = $this->patternRegistry->get($patternName);
+            } else {
+                // Use as global pattern
+                $this->globalPatterns['default'] = $this->patternRegistry->get($patternName);
+            }
+        }
+        
         // Load global patterns
         $globalPatterns = $this->options['patterns'] ?? [];
         foreach ($globalPatterns as $name => $config) {

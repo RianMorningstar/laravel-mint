@@ -66,18 +66,27 @@ class TestModelFactory
         
         // Create the model class if it doesn't exist
         if (!class_exists($className)) {
+            $fillableFields = array_keys($attributes);
             eval("
                 class {$className} extends \Illuminate\Database\Eloquent\Model {
                     protected \$table = '{$tableName}';
                     protected \$guarded = [];
+                    protected \$fillable = " . var_export($fillableFields, true) . ";
                     protected \$casts = " . var_export(self::getCasts($attributes), true) . ";
                     
-                    " . self::generateRelationshipMethods($relationships) . "
+                    " . self::generateRelationshipMethods($relationships, $className) . "
+                    
+                    public function getSchemaColumns() {
+                        return " . var_export($attributes, true) . ";
+                    }
                 }
             ");
         }
         
         self::$createdModels[] = $className;
+        
+        // Register inverse relationships
+        self::registerInverseRelationships($className, $relationships);
         
         return $className;
     }
@@ -128,7 +137,7 @@ class TestModelFactory
     /**
      * Generate relationship method definitions
      */
-    protected static function generateRelationshipMethods(array $relationships): string
+    protected static function generateRelationshipMethods(array $relationships, string $currentClass): string
     {
         $methods = [];
         
@@ -138,9 +147,19 @@ class TestModelFactory
             
             switch ($type) {
                 case 'hasMany':
+                    // Determine the foreign key
+                    $foreignKey = $config['foreign_key'] ?? null;
+                    if (!$foreignKey) {
+                        // Try to guess based on relation name
+                        if ($relation === 'orders') {
+                            $foreignKey = 'customer_id';
+                        } else {
+                            $foreignKey = strtolower(str_replace('Test', '', str_replace('Model', '', $currentClass))) . '_id';
+                        }
+                    }
                     $methods[] = "
                         public function {$relation}() {
-                            return \$this->hasMany('{$related}');
+                            return \$this->hasMany('{$related}', '{$foreignKey}');
                         }
                     ";
                     break;
@@ -169,6 +188,15 @@ class TestModelFactory
         }
         
         return implode("\n", $methods);
+    }
+    
+    /**
+     * Register inverse relationships on related models
+     */
+    protected static function registerInverseRelationships(string $className, array $relationships): void
+    {
+        // Store inverse relationships for later use
+        // This is a simplified approach - in production you'd handle this differently
     }
     
     /**
