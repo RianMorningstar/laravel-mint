@@ -7,7 +7,7 @@ Generate realistic test data that actually makes sense.
 [![MIT License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Total Downloads](https://img.shields.io/packagist/dt/argent/laravel-mint.svg?style=flat-square)](https://packagist.org/packages/argent/laravel-mint)
 
-<p align="center">
+<p align="left">
   <img src="https://img.shields.io/badge/PHP-8.2%2B-blue?style=for-the-badge" alt="PHP 8.2+">
   <img src="https://img.shields.io/badge/Laravel-10.x%20|%2011.x%20|%2012.x-red?style=for-the-badge" alt="Laravel 10.x|11.x|12.x">
   <img src="https://img.shields.io/badge/Database-SQLite%20|%20MySQL%20|%20PostgreSQL-green?style=for-the-badge" alt="Multi-Database Support">
