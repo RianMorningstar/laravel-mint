@@ -35,8 +35,8 @@ class SimpleGenerator extends DataGenerator
             $this->showProgress("Generating {$count} {$modelClass} records");
         }
 
-        // Generate in chunks
-        $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass) {
+        // Generate in chunks, passing the options as overrides
+        $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass, $options) {
             // Insert chunk into database
             $this->insertRecords($modelClass, $chunk);
 
@@ -50,7 +50,7 @@ class SimpleGenerator extends DataGenerator
             if (php_sapi_name() === 'cli') {
                 $this->updateProgress($current, $total);
             }
-        });
+        }, $options);
 
         // Handle relationships after all base records are created
         if (! empty($this->analysis['relationships'])) {

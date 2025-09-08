@@ -180,7 +180,9 @@ abstract class DataGenerator
         $nullable = $columnDetails['nullable'] ?? false;
 
         // Random chance of null for nullable columns
-        if ($nullable && $this->faker->boolean(10)) { // 10% chance of null
+        // Skip null generation if explicitly requested or if we have custom attributes
+        $hasCustomAttributes = $this->hasCustomAttributes();
+        if ($nullable && !$hasCustomAttributes && $this->faker->boolean(10)) { // 10% chance of null
             return null;
         }
 
@@ -455,5 +457,27 @@ abstract class DataGenerator
             'peak_memory' => $this->formatBytes(memory_get_peak_usage(true)),
             'statistics' => $this->statistics,
         ];
+    }
+
+    /**
+     * Check if we have custom attributes in options
+     */
+    protected function hasCustomAttributes(): bool
+    {
+        $skipKeys = [
+            'silent', 'chunk', 'pattern', 'patterns', 'with-relationships',
+            'field', 'column_patterns', 'model_patterns', 'use_patterns',
+            'with_relationships', 'mode', 'combination', 'weights',
+            'performance', 'seed', 'mean', 'stddev', 'scale',
+            'pattern_config', 'lambda', 'min', 'max',
+        ];
+
+        foreach ($this->options as $key => $value) {
+            if (!in_array($key, $skipKeys)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
