@@ -36,7 +36,7 @@ class SimpleGenerator extends DataGenerator
         }
 
         // Generate in chunks, passing the options as overrides
-        $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass, $options) {
+        $this->generateInChunks($modelClass, $count, function ($chunk, $current, $total) use (&$generated, $modelClass) {
             // Insert chunk into database
             $this->insertRecords($modelClass, $chunk);
 

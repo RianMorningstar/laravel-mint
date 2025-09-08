@@ -182,7 +182,7 @@ abstract class DataGenerator
         // Random chance of null for nullable columns
         // Skip null generation if explicitly requested or if we have custom attributes
         $hasCustomAttributes = $this->hasCustomAttributes();
-        if ($nullable && !$hasCustomAttributes && $this->faker->boolean(10)) { // 10% chance of null
+        if ($nullable && ! $hasCustomAttributes && $this->faker->boolean(10)) { // 10% chance of null
             return null;
         }
 
@@ -473,7 +473,7 @@ abstract class DataGenerator
         ];
 
         foreach ($this->options as $key => $value) {
-            if (!in_array($key, $skipKeys)) {
+            if (! in_array($key, $skipKeys)) {
                 return true;
             }
         }
