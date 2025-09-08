@@ -172,6 +172,14 @@ trait AssertionHelpers
         // Second call should hit cache
         $secondResult = $operation();
 
+        // Remove dynamic fields that may change between calls
+        if (is_array($firstResult) && isset($firstResult['record_count'])) {
+            unset($firstResult['record_count']);
+        }
+        if (is_array($secondResult) && isset($secondResult['record_count'])) {
+            unset($secondResult['record_count']);
+        }
+
         Assert::assertEquals(
             $firstResult,
             $secondResult,

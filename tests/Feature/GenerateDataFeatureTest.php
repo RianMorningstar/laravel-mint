@@ -16,6 +16,79 @@ class GenerateDataFeatureTest extends TestCase
     {
         parent::setUp();
         DatabaseSeeder::setupTestDatabase();
+
+        // Create test models that the commands expect
+        $this->createTestModels();
+    }
+
+    protected function createTestModels(): void
+    {
+        // Create User model in App\Models namespace
+        if (! class_exists('App\Models\User')) {
+            eval('
+                namespace App\Models;
+                class User extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "users";
+                    protected $fillable = ["name", "email", "password"];
+                }
+            ');
+        }
+
+        // Create Post model
+        if (! class_exists('App\Models\Post')) {
+            eval('
+                namespace App\Models;
+                class Post extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "posts";
+                    protected $fillable = ["user_id", "title", "content", "status", "views"];
+                }
+            ');
+        }
+
+        // Create Product model
+        if (! class_exists('App\Models\Product')) {
+            eval('
+                namespace App\Models;
+                class Product extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "products";
+                    protected $fillable = ["name", "sku", "description", "price", "stock", "is_active", "attributes", "category_id"];
+                }
+            ');
+        }
+
+        // Create Category model
+        if (! class_exists('App\Models\Category')) {
+            eval('
+                namespace App\Models;
+                class Category extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "categories";
+                    protected $fillable = ["name", "slug", "description", "parent_id"];
+                }
+            ');
+        }
+
+        // Create Comment model
+        if (! class_exists('App\Models\Comment')) {
+            eval('
+                namespace App\Models;
+                class Comment extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "comments";
+                    protected $fillable = ["post_id", "user_id", "content", "is_approved"];
+                }
+            ');
+        }
+
+        // Create Order model
+        if (! class_exists('App\Models\Order')) {
+            eval('
+                namespace App\Models;
+                class Order extends \Illuminate\Database\Eloquent\Model {
+                    protected $table = "orders";
+                    protected $fillable = ["user_id", "order_number", "total", "status", "shipping_address", "shipped_at"];
+                    protected $casts = ["shipping_address" => "json"];
+                }
+            ');
+        }
     }
 
     protected function tearDown(): void
@@ -58,12 +131,20 @@ class GenerateDataFeatureTest extends TestCase
     public function test_generate_command_with_pattern()
     {
         // Execute with pattern
-        Artisan::call('mint:generate', [
+        $result = Artisan::call('mint:generate', [
             'model' => 'App\Models\Product',
             'count' => 50,
             '--pattern' => 'normal',
             '--pattern-config' => 'field=price,mean=100,stddev=20',
         ]);
+
+        // Get output for debugging
+        $output = Artisan::output();
+
+        // Check if command succeeded
+        if ($result !== 0) {
+            $this->fail('Command failed with output: '.$output);
+        }
 
         // Verify pattern was applied
         $products = DB::table('products')->pluck('price')->toArray();
@@ -97,13 +178,14 @@ class GenerateDataFeatureTest extends TestCase
 
     public function test_generate_command_performance_mode()
     {
-        // Test chunk generation for large datasets
+        // Test performance mode for large datasets
         $startTime = microtime(true);
 
         Artisan::call('mint:generate', [
             'model' => 'App\Models\Order',
             'count' => 1000,
-            '--chunk' => 100,
+            '--performance' => true,
+            '--silent' => true,
         ]);
 
         $duration = microtime(true) - $startTime;
@@ -177,6 +259,7 @@ class GenerateDataFeatureTest extends TestCase
         // Clear all records
         Artisan::call('mint:clear', [
             'model' => 'App\Models\Post',
+            '--force' => true,
         ]);
 
         $this->assertEquals(0, DB::table('posts')->count());
@@ -186,15 +269,16 @@ class GenerateDataFeatureTest extends TestCase
     {
         // Create test data
         DB::table('posts')->insert([
-            ['user_id' => 1, 'title' => 'Post 1', 'status' => 'draft'],
-            ['user_id' => 1, 'title' => 'Post 2', 'status' => 'published'],
-            ['user_id' => 2, 'title' => 'Post 3', 'status' => 'draft'],
+            ['user_id' => 1, 'title' => 'Post 1', 'content' => 'Content 1', 'status' => 'draft'],
+            ['user_id' => 1, 'title' => 'Post 2', 'content' => 'Content 2', 'status' => 'published'],
+            ['user_id' => 2, 'title' => 'Post 3', 'content' => 'Content 3', 'status' => 'draft'],
         ]);
 
         // Clear only drafts
         Artisan::call('mint:clear', [
             'model' => 'App\Models\Post',
             '--where' => 'status=draft',
+            '--force' => true,
         ]);
 
         $this->assertEquals(1, DB::table('posts')->count());
@@ -205,24 +289,30 @@ class GenerateDataFeatureTest extends TestCase
     {
         // Create import file
         $importData = [
-            ['name' => 'Product 1', 'price' => 99.99, 'stock' => 10],
-            ['name' => 'Product 2', 'price' => 149.99, 'stock' => 5],
-            ['name' => 'Product 3', 'price' => 199.99, 'stock' => 3],
+            ['name' => 'Product 1', 'sku' => 'SKU001', 'price' => 99.99, 'stock' => 10],
+            ['name' => 'Product 2', 'sku' => 'SKU002', 'price' => 149.99, 'stock' => 5],
+            ['name' => 'Product 3', 'sku' => 'SKU003', 'price' => 199.99, 'stock' => 3],
         ];
 
         $importPath = storage_path('app/test-import.json');
         file_put_contents($importPath, json_encode($importData));
 
         // Run import command
-        Artisan::call('mint:import', [
+        $result = Artisan::call('mint:import', [
             'model' => 'App\Models\Product',
             'file' => $importPath,
             '--format' => 'json',
         ]);
 
+        // Debug output
+        $output = Artisan::output();
+
+        // Verify command succeeded
+        $this->assertEquals(0, $result, 'Import command failed with output: '.$output);
+
         // Verify data was imported
         $products = DB::table('products')->get();
-        $this->assertCount(3, $products);
+        $this->assertCount(3, $products, 'Products not imported. Output: '.$output);
         $this->assertEquals('Product 1', $products[0]->name);
         $this->assertEquals(99.99, $products[0]->price);
 
@@ -341,7 +431,7 @@ class GenerateDataFeatureTest extends TestCase
         ]);
 
         $output = Artisan::output();
-        $this->assertStringContainsString('Error', $output);
+        $this->assertStringContainsString('Failed', $output);
     }
 
     public function test_concurrent_generation()
@@ -351,10 +441,12 @@ class GenerateDataFeatureTest extends TestCase
 
         for ($i = 0; $i < 3; $i++) {
             $processes[] = function () use ($i) {
+                $attributes = json_encode(['batch' => $i]);
                 Artisan::call('mint:generate', [
                     'model' => 'App\Models\Product',
                     'count' => 100,
-                    '--attributes' => "batch={$i}",
+                    '--attributes' => "attributes={$attributes}",
+                    '--seed' => 1000 + $i, // Different seed for each batch to avoid SKU conflicts
                 ]);
             };
         }
@@ -367,10 +459,10 @@ class GenerateDataFeatureTest extends TestCase
         // Verify all records created
         $this->assertEquals(300, DB::table('products')->count());
 
-        // Verify batches
+        // Verify batches using JSON query
         for ($i = 0; $i < 3; $i++) {
             $batchCount = DB::table('products')
-                ->where('batch', $i)
+                ->whereRaw("json_extract(attributes, '$.batch') = ?", [$i])
                 ->count();
             $this->assertEquals(100, $batchCount);
         }

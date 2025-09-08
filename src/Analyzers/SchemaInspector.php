@@ -23,6 +23,12 @@ class SchemaInspector
 
         $instance = new $modelClass;
         $table = $instance->getTable();
+
+        return $this->inspectTable($table);
+    }
+
+    public function inspectTable(string $table): array
+    {
         $connection = $this->mint->getConnection();
 
         return [
@@ -67,6 +73,7 @@ class SchemaInspector
             'unsigned' => false,
             'auto_increment' => false,
             'comment' => null,
+            'unique' => false,
         ];
 
         try {
@@ -79,6 +86,15 @@ class SchemaInspector
             }
         } catch (\Exception $e) {
             // Fallback to basic details if driver-specific query fails
+        }
+
+        // Check if column is part of a unique index
+        $indexes = $this->getIndexes($table, $connection);
+        foreach ($indexes as $index) {
+            if ($index['unique'] && count($index['columns']) === 1 && in_array($column, $index['columns'])) {
+                $details['unique'] = true;
+                break;
+            }
         }
 
         // Infer data generation hints
@@ -159,9 +175,31 @@ class SchemaInspector
 
         foreach ($tableInfo as $columnInfo) {
             if ($columnInfo->name === $column) {
+                // Clean up default value - SQLite may wrap strings in quotes
+                $default = $columnInfo->dflt_value;
+                if ($default !== null && $default !== '') {
+                    // SQLite returns default values wrapped in single quotes
+                    // Remove outer quotes if present
+                    if (preg_match("/^'(.*)'$/s", $default, $matches)) {
+                        $default = $matches[1];
+                        // Handle escaped quotes inside the value
+                        $default = str_replace("''", "'", $default);
+                    }
+
+                    // After removing quotes, check if we need type conversion
+                    $columnType = strtolower($columnInfo->type);
+                    if (is_numeric($default)) {
+                        if (str_contains($columnType, 'int')) {
+                            $default = (int) $default;
+                        } elseif (str_contains($columnType, 'real') || str_contains($columnType, 'float') || str_contains($columnType, 'double') || str_contains($columnType, 'decimal')) {
+                            $default = (float) $default;
+                        }
+                    }
+                }
+
                 return [
-                    'nullable' => ! $columnInfo->notnull,
-                    'default' => $columnInfo->dflt_value,
+                    'nullable' => $columnInfo->notnull ? false : true,
+                    'default' => $default,
                     'primary' => (bool) $columnInfo->pk,
                     'full_type' => $columnInfo->type,
                 ];
@@ -218,6 +256,37 @@ class SchemaInspector
                         ];
                     }
                     $indexes[$indexName]['columns'][] = $index->column_name;
+                }
+            } elseif ($driverName === 'sqlite') {
+                // Get all indexes for the table
+                $rawIndexes = $connection->select("PRAGMA index_list({$table})");
+                foreach ($rawIndexes as $index) {
+                    $indexName = $index->name;
+                    $indexInfo = $connection->select("PRAGMA index_info({$indexName})");
+
+                    $columns = [];
+                    foreach ($indexInfo as $col) {
+                        $columns[] = $col->name;
+                    }
+
+                    // For test compatibility, create separate entries for each column
+                    // if it's a single-column index
+                    if (count($columns) === 1) {
+                        $indexes[] = [
+                            'name' => $indexName,
+                            'column' => $columns[0],
+                            'columns' => $columns,
+                            'unique' => (bool) $index->unique,
+                            'primary' => false,
+                        ];
+                    } else {
+                        $indexes[] = [
+                            'name' => $indexName,
+                            'columns' => $columns,
+                            'unique' => (bool) $index->unique,
+                            'primary' => false,
+                        ];
+                    }
                 }
             }
         } catch (\Exception $e) {

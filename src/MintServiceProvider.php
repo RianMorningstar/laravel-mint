@@ -3,17 +3,14 @@
 namespace LaravelMint;
 
 use Illuminate\Support\ServiceProvider;
-use LaravelMint\Commands\AnalyzeCommand;
-use LaravelMint\Commands\ClearCommand;
-use LaravelMint\Commands\GenerateCommand;
-use LaravelMint\Commands\ImportCommand;
-use LaravelMint\Commands\PatternListCommand;
-use LaravelMint\Commands\PatternShowCommand;
+use LaravelMint\Console\Commands\AnalyzeCommand;
+use LaravelMint\Console\Commands\ClearCommand;
 use LaravelMint\Console\Commands\ExportCommand;
-use LaravelMint\Console\Commands\ImportCommand as ConsoleImportCommand;
-use LaravelMint\Console\Commands\ScenarioListCommand;
-use LaravelMint\Console\Commands\ScenarioRunCommand;
-use LaravelMint\Console\Commands\SeedCommand;
+use LaravelMint\Console\Commands\GenerateCommand;
+use LaravelMint\Console\Commands\ImportCommand;
+use LaravelMint\Console\Commands\PatternCommand;
+use LaravelMint\Console\Commands\PatternListCommand;
+use LaravelMint\Console\Commands\ScenarioCommand;
 use LaravelMint\Integration\FactoryIntegration;
 use LaravelMint\Integration\SeederIntegration;
 use LaravelMint\Integration\WebhookManager;
@@ -33,7 +30,10 @@ class MintServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(PatternRegistry::class, function ($app) {
-            return new PatternRegistry;
+            $registry = new PatternRegistry;
+            $registry->initializeBuiltInPatterns();
+
+            return $registry;
         });
 
         $this->app->singleton(ScenarioRunner::class, function ($app) {
@@ -79,13 +79,10 @@ class MintServiceProvider extends ServiceProvider
                 GenerateCommand::class,
                 ClearCommand::class,
                 ImportCommand::class,
-                PatternListCommand::class,
-                PatternShowCommand::class,
-                ScenarioRunCommand::class,
-                ScenarioListCommand::class,
-                ConsoleImportCommand::class,
                 ExportCommand::class,
-                SeedCommand::class,
+                ScenarioCommand::class,
+                PatternCommand::class,
+                PatternListCommand::class,
             ]);
         }
     }

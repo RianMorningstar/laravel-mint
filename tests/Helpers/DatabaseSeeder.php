@@ -52,6 +52,7 @@ class DatabaseSeeder
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->timestamps();
         });
 
@@ -73,6 +74,7 @@ class DatabaseSeeder
             $table->integer('stock')->default(0);
             $table->boolean('is_active')->default(true);
             $table->json('attributes')->nullable();
+            $table->unsignedBigInteger('category_id')->nullable();
             $table->timestamps();
         });
 

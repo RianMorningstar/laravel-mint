@@ -3,136 +3,64 @@
 namespace LaravelMint\Console\Commands;
 
 use Illuminate\Console\Command;
-use LaravelMint\Import\ImportManager;
+use LaravelMint\Mint;
 
 class ImportCommand extends Command
 {
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
     protected $signature = 'mint:import 
-                            {file : Path to the file to import}
-                            {--format= : File format (csv, json, excel, sql)}
-                            {--model=* : Model class to import to}
-                            {--mapping=* : Field mappings in format field:column}
-                            {--chunk-size=1000 : Number of records to process at once}
-                            {--no-validation : Skip validation before import}
-                            {--no-transaction : Don\'t use database transactions}
-                            {--template= : Use a predefined import template}';
+                            {model : The model class to import data into}
+                            {file : Path to the import file}
+                            {--format=json : File format (json, csv)}
+                            {--chunk=1000 : Import chunk size}';
 
-    protected $description = 'Import data from various file formats';
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Import test data from a file';
 
-    public function handle()
+    /**
+     * Execute the console command.
+     */
+    public function handle(): int
     {
+        $model = $this->argument('model');
         $file = $this->argument('file');
+        $format = $this->option('format');
+        $chunkSize = (int) $this->option('chunk');
 
         if (! file_exists($file)) {
             $this->error("File not found: {$file}");
 
-            return 1;
+            return self::FAILURE;
         }
-
-        $this->info("Importing from: {$file}");
-
-        $manager = new ImportManager;
-
-        // Load template if specified
-        if ($template = $this->option('template')) {
-            try {
-                $manager = ImportManager::fromTemplate($template);
-                $this->info("Using template: {$template}");
-            } catch (\Exception $e) {
-                $this->error("Failed to load template: {$e->getMessage()}");
-
-                return 1;
-            }
-        }
-
-        // Configure mappings
-        $models = $this->option('model');
-        $mappings = $this->option('mapping');
-
-        if (! empty($models)) {
-            foreach ($models as $model) {
-                if (! class_exists($model)) {
-                    $this->error("Model not found: {$model}");
-
-                    return 1;
-                }
-
-                // Parse mappings for this model
-                $modelMappings = [];
-                foreach ($mappings as $mapping) {
-                    if (strpos($mapping, ':') !== false) {
-                        [$field, $column] = explode(':', $mapping, 2);
-                        $modelMappings[$field] = $column;
-                    }
-                }
-
-                if (! empty($modelMappings)) {
-                    $manager->mapping($model, $modelMappings);
-                    $this->info('Mapped '.count($modelMappings)." fields for {$model}");
-                }
-            }
-        }
-
-        // Configure options
-        $manager->chunkSize((int) $this->option('chunk-size'))
-            ->withValidation(! $this->option('no-validation'))
-            ->withTransactions(! $this->option('no-transaction'));
-
-        // Show progress
-        $this->info('Starting import...');
-        $bar = $this->output->createProgressBar();
 
         try {
-            $result = $manager->import($file, $this->option('format'));
+            $mint = app(Mint::class);
 
-            $bar->finish();
-            $this->newLine(2);
+            $this->info("Importing data from {$file}...");
 
-            // Display results
-            if ($result->isSuccess()) {
-                $this->info('✓ Import completed successfully');
+            $result = $mint->import($model, $file, $format, [
+                'chunk_size' => $chunkSize,
+            ]);
 
-                $data = $result->toArray();
-                $this->table(
-                    ['Metric', 'Value'],
-                    [
-                        ['Format', $data['format']],
-                        ['Records Processed', $data['processed']],
-                        ['Records Imported', $data['total_imported']],
-                        ['Execution Time', $data['execution_time']],
-                    ]
-                );
+            $this->info("Successfully imported {$result['imported']} records.");
 
-                if (! empty($data['imported'])) {
-                    $this->newLine();
-                    $this->info('Imported by model:');
-                    foreach ($data['imported'] as $model => $count) {
-                        $this->line("  • {$model}: {$count}");
-                    }
-                }
-            } else {
-                $this->error('✗ Import failed');
-
-                $data = $result->toArray();
-                if ($data['errors'] > 0) {
-                    $this->error("Errors: {$data['errors']}");
-                }
-                if ($data['validation_errors'] > 0) {
-                    $this->error("Validation errors: {$data['validation_errors']}");
-                }
+            if (! empty($result['errors'])) {
+                $this->warn("Encountered {$result['errors']} errors during import.");
             }
 
-            return $result->isSuccess() ? 0 : 1;
+            return self::SUCCESS;
         } catch (\Exception $e) {
-            $bar->finish();
-            $this->newLine(2);
-            $this->error('Import failed: '.$e->getMessage());
+            $this->error('Failed to import data: '.$e->getMessage());
 
-            if ($this->option('verbose')) {
-                $this->error($e->getTraceAsString());
-            }
-
-            return 1;
+            return self::FAILURE;
         }
     }
 }

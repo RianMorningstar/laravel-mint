@@ -102,10 +102,12 @@ class SeasonalPattern extends AbstractPattern implements TemporalPatternInterfac
         $trendValue = $this->calculateTrendComponent($timestamp);
 
         // Combine components
-        $value = $this->baseValue + $seasonalValue + $trendValue;
+        // If amplitude < 1, treat it as a percentage of base value
+        $actualAmplitude = $this->amplitude < 1 ? $this->amplitude * $this->baseValue : $this->amplitude;
+        $value = $this->baseValue + ($seasonalValue * $actualAmplitude / $this->amplitude) + $trendValue;
 
-        // Add random noise (±5%)
-        $noise = $this->faker->randomFloat(2, 0.95, 1.05);
+        // Add random noise (±2% instead of ±5% to make peaks more distinguishable)
+        $noise = $this->faker->randomFloat(4, 0.98, 1.02);
         $value *= $noise;
 
         return $this->clamp($value, $this->min, $this->max);
@@ -138,8 +140,10 @@ class SeasonalPattern extends AbstractPattern implements TemporalPatternInterfac
 
         // Convert distance to seasonal value using cosine
         // 0 distance = peak (amplitude), 0.5 distance = trough (-amplitude)
+        // We want: distance=0 => factor=1 (peak), distance=0.5 => factor=-1 (trough)
         $seasonalFactor = cos(2 * pi() * $minDistance);
 
+        // Amplitude should be positive for peaks
         return $this->amplitude * $seasonalFactor;
     }
 

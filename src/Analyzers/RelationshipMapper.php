@@ -25,6 +25,11 @@ class RelationshipMapper
 
     public function map(string $modelClass, int $depth = 0): array
     {
+        // Reset visited models if this is the top-level call
+        if ($depth === 0) {
+            $this->visitedModels = [];
+        }
+
         if (! class_exists($modelClass)) {
             throw new \InvalidArgumentException("Model class {$modelClass} does not exist");
         }
@@ -43,6 +48,18 @@ class RelationshipMapper
                 'circular_reference' => true,
                 'model' => $modelClass,
                 'relationships' => [],
+                'dependencies' => [
+                    'required' => [],
+                    'dependent' => [],
+                    'optional' => [],
+                ],
+                'generation_order' => [
+                    'priority' => 0,
+                    'can_parallelize' => false,
+                    'strategy' => 'circular',
+                    'warning' => 'Circular dependency detected',
+                ],
+                'depth' => $depth,
             ];
         }
 

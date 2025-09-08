@@ -20,6 +20,18 @@ class PatternRegistry
 
     public function __construct()
     {
+        // Don't auto-register built-in patterns
+        // They should be registered explicitly if needed
+    }
+
+    /**
+     * Initialize with built-in patterns
+     */
+    public function initializeBuiltInPatterns(): void
+    {
+        if (! empty($this->builtInPatterns)) {
+            return; // Already initialized
+        }
         $this->registerBuiltInPatterns();
     }
 
@@ -106,8 +118,23 @@ class PatternRegistry
 
         $pattern = $this->patterns[$patternName];
 
-        // If it's already an instance, return it
+        // If it's already an instance, check if it's a factory wrapper
         if ($pattern instanceof PatternInterface) {
+            // Check if this is a factory wrapper (has a factory property)
+            if (property_exists($pattern, 'factory')) {
+                // It's a factory wrapper, call the factory to get the real pattern
+                $reflection = new \ReflectionClass($pattern);
+                $factoryProp = $reflection->getProperty('factory');
+                $factoryProp->setAccessible(true);
+                $factory = $factoryProp->getValue($pattern);
+
+                $configProp = $reflection->getProperty('defaultConfig');
+                $configProp->setAccessible(true);
+                $defaultConfig = $configProp->getValue($pattern);
+
+                return $factory(array_merge($defaultConfig, $config));
+            }
+
             return $pattern;
         }
 
@@ -120,6 +147,12 @@ class PatternRegistry
      */
     public function get(string $name): PatternInterface
     {
+        $patternName = $this->resolvePattern($name);
+
+        if (! $patternName) {
+            throw new \InvalidArgumentException("Pattern not found: {$name}");
+        }
+
         return $this->create($name);
     }
 
@@ -255,5 +288,100 @@ class PatternRegistry
         }
 
         return array_unique($categories);
+    }
+
+    /**
+     * Remove a pattern from the registry
+     */
+    public function remove(string $name): void
+    {
+        $patternName = $this->resolvePattern($name);
+
+        if ($patternName) {
+            unset($this->patterns[$patternName]);
+
+            // Remove any aliases pointing to this pattern
+            $this->aliases = array_filter($this->aliases, function ($target) use ($patternName) {
+                return $target !== $patternName;
+            });
+        }
+    }
+
+    /**
+     * Load patterns from configuration
+     */
+    public function loadFromConfig(array $config = []): void
+    {
+        foreach ($config as $name => $patternConfig) {
+            if (isset($patternConfig['class']) && isset($patternConfig['config'])) {
+                $class = $patternConfig['class'];
+                if (class_exists($class)) {
+                    $this->patterns[$name] = $class;
+                }
+            }
+        }
+    }
+
+    /**
+     * Register a pattern factory
+     */
+    public function registerFactory(string $name, callable $factory, array $defaultConfig = []): void
+    {
+        $this->patterns[$name] = new class($factory, $defaultConfig) implements PatternInterface
+        {
+            private $factory;
+
+            private $defaultConfig;
+
+            public function __construct(callable $factory, array $defaultConfig = [])
+            {
+                $this->factory = $factory;
+                $this->defaultConfig = $defaultConfig;
+            }
+
+            public function apply(array $data, array $config = []): array
+            {
+                $pattern = ($this->factory)($config);
+
+                return $pattern->apply($data, $config);
+            }
+
+            public function generate(array $context = []): mixed
+            {
+                $pattern = ($this->factory)($this->defaultConfig);
+
+                return $pattern->generate($context);
+            }
+
+            public function validate(array $config): bool
+            {
+                return true;
+            }
+
+            public function setConfig(array $config): void
+            {
+                // Config is passed to factory when creating pattern
+            }
+
+            public function reset(): void
+            {
+                // No state to reset
+            }
+
+            public function getName(): string
+            {
+                return 'factory-pattern';
+            }
+
+            public function getDescription(): string
+            {
+                return 'Pattern created by factory';
+            }
+
+            public function getParameters(): array
+            {
+                return [];
+            }
+        };
     }
 }

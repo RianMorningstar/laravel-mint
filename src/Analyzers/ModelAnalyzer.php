@@ -50,7 +50,44 @@ class ModelAnalyzer
         $reflection = new ReflectionClass($modelClass);
         $instance = new $modelClass;
 
+        // Get schema information
+        $schemaInspector = new SchemaInspector($this->mint);
+        $schemaInfo = $schemaInspector->inspect($modelClass);
+
+        // Create 'attributes' with field information
+        $attributes = [];
+        if (isset($schemaInfo['columns']) && ! empty($schemaInfo['columns'])) {
+            foreach ($schemaInfo['columns'] as $column => $details) {
+                $attributes[$column] = [
+                    'type' => $details['type'] ?? 'string',
+                    'nullable' => $details['nullable'] ?? false,
+                    'default' => $details['default'] ?? null,
+                    'unique' => $details['unique'] ?? false,
+                ];
+            }
+        } elseif (method_exists($instance, 'getSchemaColumns')) {
+            // Fallback to model's getSchemaColumns method (for test models)
+            $schemaColumns = $instance->getSchemaColumns();
+            foreach ($schemaColumns as $column => $type) {
+                // Get schema details from the actual database if possible
+                $columnDetails = $this->getColumnDetailsDirectly($instance->getTable(), $column);
+                $attributes[$column] = [
+                    'type' => $type,
+                    'nullable' => $columnDetails['nullable'] ?? false,
+                    'default' => $columnDetails['default'] ?? null,
+                    'unique' => $columnDetails['unique'] ?? false,
+                ];
+            }
+        }
+
+        // Also create 'fields' for compatibility
+        $fields = [];
+        foreach ($attributes as $name => $details) {
+            $fields[$name] = $details;
+        }
+
         return [
+            'model' => $modelClass,
             'class' => $modelClass,
             'table' => $instance->getTable(),
             'primary_key' => $instance->getKeyName(),
@@ -62,15 +99,20 @@ class ModelAnalyzer
             'hidden' => $instance->getHidden(),
             'visible' => $instance->getVisible(),
             'casts' => $instance->getCasts(),
-            'attributes' => $instance->getAttributes(),
+            'attributes' => $attributes,
+            'fields' => $fields,
             'appends' => $this->getAppends($instance),
             'dates' => $this->getDates($instance),
+            'relationships' => $this->analyzeRelations($reflection, $instance),
             'relations' => $this->analyzeRelations($reflection, $instance),
             'scopes' => $this->analyzeScopes($reflection),
             'mutators' => $this->analyzeMutators($reflection),
             'accessors' => $this->analyzeAccessors($reflection),
             'validation_rules' => $this->extractValidationRules($modelClass),
+            'validation_suggestions' => $this->suggestValidationRules($attributes),
             'traits' => $this->analyzeTraits($reflection),
+            'indexes' => $schemaInfo['indexes'] ?? [],
+            'record_count' => $this->getRecordCount($modelClass),
         ];
     }
 
@@ -134,22 +176,44 @@ class ModelAnalyzer
             }
 
             try {
-                $returnType = $method->getReturnType();
+                // Try to call the method and check if it returns a relation
+                $result = $method->invoke($instance);
 
-                // Check if method returns a relationship
-                if ($returnType && ! $returnType->isBuiltin()) {
-                    $typeName = $returnType->getName();
-                    if ($this->isRelationClass($typeName)) {
+                if (is_object($result)) {
+                    $resultClass = get_class($result);
+                    if ($this->isRelationClass($resultClass)) {
+                        // Get the related model from the relation
+                        $relatedModel = null;
+                        if (method_exists($result, 'getRelated')) {
+                            $relatedModel = get_class($result->getRelated());
+                        }
+
                         $relations[$method->getName()] = [
-                            'type' => $this->getRelationType($typeName),
-                            'class' => $typeName,
+                            'type' => $this->getRelationType($resultClass),
+                            'class' => $resultClass,
                             'method' => $method->getName(),
+                            'model' => $relatedModel,
                         ];
                     }
                 }
             } catch (\Exception $e) {
-                // Skip methods that throw exceptions
-                continue;
+                // Also try checking return type annotation if method invocation fails
+                try {
+                    $returnType = $method->getReturnType();
+                    if ($returnType && ! $returnType->isBuiltin()) {
+                        $typeName = $returnType->getName();
+                        if ($this->isRelationClass($typeName)) {
+                            $relations[$method->getName()] = [
+                                'type' => $this->getRelationType($typeName),
+                                'class' => $typeName,
+                                'method' => $method->getName(),
+                            ];
+                        }
+                    }
+                } catch (\Exception $e2) {
+                    // Skip methods that throw exceptions
+                    continue;
+                }
             }
         }
 
@@ -169,10 +233,7 @@ class ModelAnalyzer
             $name = $method->getName();
             if (str_starts_with($name, 'scope') && strlen($name) > 5) {
                 $scopeName = lcfirst(substr($name, 5));
-                $scopes[$scopeName] = [
-                    'method' => $name,
-                    'parameters' => $method->getNumberOfParameters() - 1, // Exclude $query parameter
-                ];
+                $scopes[] = $scopeName;
             }
         }
 
@@ -190,7 +251,7 @@ class ModelAnalyzer
             // Laravel 9+ attribute mutators
             if (preg_match('/^set([A-Z][a-zA-Z]*)Attribute$/', $name, $matches)) {
                 $attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $matches[1]));
-                $mutators[$attribute] = $name;
+                $mutators[] = $attribute;
             }
         }
 
@@ -208,7 +269,7 @@ class ModelAnalyzer
             // Laravel 9+ attribute accessors
             if (preg_match('/^get([A-Z][a-zA-Z]*)Attribute$/', $name, $matches)) {
                 $attribute = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $matches[1]));
-                $accessors[$attribute] = $name;
+                $accessors[] = $attribute;
             }
         }
 
@@ -283,18 +344,19 @@ class ModelAnalyzer
 
     protected function getRelationType(string $className): string
     {
+        // Order matters - check longer strings first to avoid false matches
         $map = [
+            'BelongsToMany' => 'belongsToMany',  // Must come before BelongsTo
+            'HasOneThrough' => 'hasOneThrough',  // Must come before HasOne
+            'HasManyThrough' => 'hasManyThrough', // Must come before HasMany
+            'MorphToMany' => 'morphToMany',      // Must come before MorphTo
+            'MorphedByMany' => 'morphedByMany',
             'HasOne' => 'hasOne',
             'HasMany' => 'hasMany',
             'BelongsTo' => 'belongsTo',
-            'BelongsToMany' => 'belongsToMany',
-            'HasOneThrough' => 'hasOneThrough',
-            'HasManyThrough' => 'hasManyThrough',
             'MorphTo' => 'morphTo',
             'MorphOne' => 'morphOne',
             'MorphMany' => 'morphMany',
-            'MorphToMany' => 'morphToMany',
-            'MorphedByMany' => 'morphedByMany',
         ];
 
         foreach ($map as $key => $type) {
@@ -325,5 +387,89 @@ class ModelAnalyzer
             '__clone',
             '__debugInfo',
         ];
+    }
+
+    protected function getRecordCount(string $modelClass): int
+    {
+        try {
+            return $modelClass::count();
+        } catch (\Exception $e) {
+            return 0;
+        }
+    }
+
+    protected function getColumnDetailsDirectly(string $table, string $column): array
+    {
+        try {
+            $connection = $this->mint->getConnection();
+            $schemaInspector = new SchemaInspector($this->mint);
+            $schemaInfo = $schemaInspector->inspectTable($table);
+
+            if (isset($schemaInfo['columns'][$column])) {
+                return $schemaInfo['columns'][$column];
+            }
+        } catch (\Exception $e) {
+            // Fallback to defaults
+        }
+
+        return [
+            'nullable' => false,
+            'default' => null,
+            'unique' => false,
+        ];
+    }
+
+    protected function suggestValidationRules(array $attributes): array
+    {
+        $suggestions = [];
+
+        foreach ($attributes as $fieldName => $details) {
+            $rules = [];
+            $type = $details['type'] ?? 'string';
+
+            // Required/nullable
+            if (! ($details['nullable'] ?? true)) {
+                $rules[] = 'required';
+            } else {
+                $rules[] = 'nullable';
+            }
+
+            // Type-based rules
+            if (str_contains($type, 'int')) {
+                $rules[] = 'integer';
+            } elseif (str_contains($type, 'bool')) {
+                $rules[] = 'boolean';
+            } elseif (str_contains($type, 'date')) {
+                $rules[] = 'date';
+            } elseif (str_contains($type, 'json')) {
+                $rules[] = 'json';
+            } elseif (str_contains($type, 'decimal') || str_contains($type, 'float')) {
+                $rules[] = 'numeric';
+            }
+
+            // Field name-based rules
+            $fieldLower = strtolower($fieldName);
+            if (str_contains($fieldLower, 'email')) {
+                $rules[] = 'email';
+            } elseif (str_contains($fieldLower, 'url') || str_contains($fieldLower, 'website')) {
+                $rules[] = 'url';
+            } elseif (str_contains($fieldLower, 'phone')) {
+                $rules[] = 'regex:/^[0-9\-\+\(\)\ ]+$/';
+            }
+
+            // Unique constraint
+            if ($details['unique'] ?? false) {
+                $rules[] = 'unique';
+            }
+
+            // Length constraint
+            if (isset($details['length'])) {
+                $rules[] = 'max:'.$details['length'];
+            }
+
+            $suggestions[$fieldName] = $rules;
+        }
+
+        return $suggestions;
     }
 }

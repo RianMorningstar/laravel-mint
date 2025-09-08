@@ -3,9 +3,10 @@
 namespace LaravelMint\Tests\Unit;
 
 use Illuminate\Support\Facades\Config;
+use LaravelMint\Mint;
 use LaravelMint\Scenarios\BaseScenario;
-use LaravelMint\Scenarios\Presets\EcommerceScenario;
-use LaravelMint\Scenarios\Presets\SaaSScenario;
+use LaravelMint\Scenarios\Library\EcommerceScenario;
+use LaravelMint\Scenarios\Library\SaaSScenario;
 use LaravelMint\Scenarios\ScenarioBuilder;
 use LaravelMint\Scenarios\ScenarioInterface;
 use LaravelMint\Scenarios\ScenarioManager;
@@ -26,13 +27,16 @@ class ScenarioManagerTest extends TestCase
 
     protected ScenarioValidator $validator;
 
+    protected Mint $mint;
+
     protected function setUp(): void
     {
         parent::setUp();
 
+        $this->mint = $this->app->make(Mint::class);
         $this->builder = new ScenarioBuilder;
         $this->validator = new ScenarioValidator;
-        $this->manager = new ScenarioManager($this->builder, $this->validator);
+        $this->manager = new ScenarioManager($this->mint, false);
     }
 
     protected function tearDown(): void
@@ -62,6 +66,7 @@ class ScenarioManagerTest extends TestCase
     {
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
+        $scenario->shouldReceive('getDescription')->andReturn('Test scenario');
 
         $this->manager->register('test-scenario', $scenario);
 
@@ -100,6 +105,7 @@ class ScenarioManagerTest extends TestCase
 
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
+        $scenario->shouldReceive('getDescription')->andReturn('Test scenario');
         $scenario->shouldReceive('run')->once()->andReturn($result);
 
         $this->manager->register('test-scenario', $scenario);
@@ -116,6 +122,7 @@ class ScenarioManagerTest extends TestCase
 
         $scenario = Mockery::mock(ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('configurable');
+        $scenario->shouldReceive('getDescription')->andReturn('Configurable scenario');
         $scenario->shouldReceive('run')
             ->with($options)
             ->once()
@@ -188,6 +195,18 @@ class ScenarioManagerTest extends TestCase
 
             protected string $description = 'Test base scenario';
 
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario
+                $this->generatedData['User'] = collect(range(1, 5));
+                $this->generatedData['Post'] = collect(range(1, 10));
+            }
+
             protected function defineSteps(): array
             {
                 return [
@@ -259,6 +278,17 @@ class ScenarioManagerTest extends TestCase
         {
             protected string $name = 'pattern-scenario';
 
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario with patterns
+                $this->generatedData['User'] = collect(range(1, 100));
+            }
+
             protected function defineSteps(): array
             {
                 return [
@@ -285,21 +315,29 @@ class ScenarioManagerTest extends TestCase
 
     public function test_scenario_with_callbacks()
     {
-        $beforeCalled = false;
-        $afterCalled = false;
+        $callbackState = ['before' => false, 'after' => false];
 
-        $scenario = new class($beforeCalled, $afterCalled) extends BaseScenario
+        $scenario = new class($callbackState) extends BaseScenario
         {
             protected string $name = 'callback-scenario';
 
-            private $before;
+            private array $state;
 
-            private $after;
-
-            public function __construct(&$before, &$after)
+            public function __construct(array &$state)
             {
-                $this->before = &$before;
-                $this->after = &$after;
+                $this->state = &$state;
+                parent::__construct();
+            }
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario
+                $this->generatedData['User'] = collect([1]);
             }
 
             protected function defineSteps(): array
@@ -309,14 +347,14 @@ class ScenarioManagerTest extends TestCase
                 ];
             }
 
-            protected function beforeRun(): void
+            protected function beforeExecute(): void
             {
-                $this->before = true;
+                $this->state['before'] = true;
             }
 
-            protected function afterRun(ScenarioResult $result): void
+            protected function afterExecute(): void
             {
-                $this->after = true;
+                $this->state['after'] = true;
             }
         };
 
@@ -324,8 +362,8 @@ class ScenarioManagerTest extends TestCase
 
         $scenario->run();
 
-        $this->assertTrue($beforeCalled);
-        $this->assertTrue($afterCalled);
+        $this->assertTrue($callbackState['before']);
+        $this->assertTrue($callbackState['after']);
     }
 
     public function test_scenario_error_handling()
@@ -333,6 +371,17 @@ class ScenarioManagerTest extends TestCase
         $scenario = new class extends BaseScenario
         {
             protected string $name = 'error-scenario';
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // This will fail as NonExistentModel doesn't exist
+                throw new \Exception('Model not found');
+            }
 
             protected function defineSteps(): array
             {
@@ -355,6 +404,18 @@ class ScenarioManagerTest extends TestCase
             protected string $name = 'transaction-scenario';
 
             protected bool $useTransaction = true;
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario with transaction
+                $this->generatedData['User'] = collect(range(1, 5));
+                $this->generatedData['Post'] = collect(range(1, 10));
+            }
 
             protected function defineSteps(): array
             {
@@ -411,6 +472,17 @@ class ScenarioManagerTest extends TestCase
         $scenario = new class extends BaseScenario
         {
             protected string $name = 'performance-scenario';
+
+            protected function initialize(): void
+            {
+                // Initialize test scenario
+            }
+
+            protected function execute(): void
+            {
+                // Execute test scenario for performance
+                $this->generatedData['User'] = collect(range(1, 1000));
+            }
 
             protected function defineSteps(): array
             {

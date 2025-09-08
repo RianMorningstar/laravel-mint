@@ -2,6 +2,7 @@
 
 namespace LaravelMint\Tests\Unit;
 
+use Illuminate\Support\Facades\Schema;
 use LaravelMint\Mint;
 use LaravelMint\Scenarios\ScenarioManager;
 use LaravelMint\Tests\Helpers\AssertionHelpers;
@@ -73,7 +74,8 @@ class MintTest extends TestCase
 
     public function test_generate_with_custom_attributes()
     {
-        $modelClass = TestModelFactory::create('Book', [
+        // Use a unique model name to avoid table conflicts
+        $modelClass = TestModelFactory::create('BookCustomAttrs', [
             'title' => 'string',
             'author' => 'string',
             'isbn' => 'string',
@@ -106,7 +108,7 @@ class MintTest extends TestCase
             'stddev' => 20,
         ]);
 
-        $attendeeCounts = array_map(fn ($r) => $r->attendees, $records);
+        $attendeeCounts = $records->map(fn ($r) => $r->attendees)->toArray();
         $this->assertDataDistribution($attendeeCounts, 100, 0.3);
     }
 
@@ -176,15 +178,10 @@ class MintTest extends TestCase
     {
         $scenario = Mockery::mock(\LaravelMint\Scenarios\ScenarioInterface::class);
         $scenario->shouldReceive('getName')->andReturn('test-scenario');
-        $scenario->shouldReceive('run')->once()->andReturn(
-            new \LaravelMint\Scenarios\ScenarioResult(true, [
-                'records_created' => 100,
-            ])
-        );
 
         $manager = Mockery::mock(ScenarioManager::class);
         $manager->shouldReceive('get')->with('test-scenario')->andReturn($scenario);
-        $manager->shouldReceive('run')->with('test-scenario', Mockery::any())->andReturn(
+        $manager->shouldReceive('run')->with('test-scenario', Mockery::any())->once()->andReturn(
             new \LaravelMint\Scenarios\ScenarioResult(true, [
                 'records_created' => 100,
             ])
@@ -200,17 +197,27 @@ class MintTest extends TestCase
 
         // Just verify no exception was thrown
         $this->assertTrue(true);
+
+        // Clean up mocks to avoid risky test warning
+        Mockery::close();
     }
 
     public function test_batch_generation_creates_multiple_models()
     {
+        // Clean up any existing posts table first
+        if (Schema::hasTable('posts')) {
+            Schema::drop('posts');
+        }
+
         $userClass = TestModelFactory::create('User', [
             'name' => 'string',
             'email' => 'string',
+            'password' => 'string',
         ]);
 
         $postClass = TestModelFactory::create('Post', [
             'title' => 'string',
+            'content' => 'text',
             'user_id' => 'integer',
         ], [
             'user' => ['type' => 'belongsTo', 'model' => $userClass],

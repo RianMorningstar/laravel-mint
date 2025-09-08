@@ -1,0 +1,746 @@
+
+Deprecated: Mockery::formatArgs(): Implicitly marking parameter $arguments as nullable is deprecated, the explicit nullable type must be used instead in /home/argent/laravel-mint/package/vendor/mockery/mockery/library/Mockery.php on line 536
+
+Deprecated: Mockery::formatObjects(): Implicitly marking parameter $objects as nullable is deprecated, the explicit nullable type must be used instead in /home/argent/laravel-mint/package/vendor/mockery/mockery/library/Mockery.php on line 612
+PHPUnit 11.5.36 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 8.4.1
+Configuration: /home/argent/laravel-mint/package/phpunit.xml
+
+
+Generating 10 App\Models\User records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 10 records
+  Memory: 34 MB (peak: 34 MB)
+.
+Generating 5 App\Models\Post records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 36.5 MB (peak: 36.5 MB)
+.E
+Generating 5 App\Models\User records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 38.5 MB (peak: 38.5 MB)
+EE
+Generating 10 App\Models\Product records
+
+Generating 10 App\Models\Product records
+.F.EF.EE
+Generating 10 App\Models\User records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 10 records
+  Memory: 38.5 MB (peak: 38.5 MB)
+
+Generating 5 App\Models\Category records
+EF
+Generating 100 App\Models\Product records
+
+Generating 100 App\Models\Product records
+
+Generating 100 App\Models\Product records
+F....
+Generating 5 TestModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+.
+Generating 3 TestModelCustom records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 3 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+.
+Generating 10 TestModelClear records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 10 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+..
+Generating 5 TestModelBatch1 records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+
+Generating 3 TestModelBatch2 records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 3 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+.
+Generating 100 TestModelPerformance records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 100 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+.
+Generating 100 TestSalesModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 100 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+...
+Generating 50 TestCustomerModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 50 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+..
+Generating 100 TestCachedDataModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 100 records
+  Memory: 40.5 MB (peak: 40.5 MB)
+
+Generating 100 TestCachedDataModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 100 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+..
+Generating 100 TestDynamicTestModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 100 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+....................S..S.S....  63 / 131 ( 48%)
+.F
+Generating 5 TestArticleModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+.
+Generating 3 TestBookModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 3 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+F
+Generating 10 TestEventModel records
+E
+Generating 10 TestTempDataModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 10 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+.
+Generating 5 TestLogModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+
+Generating 3 TestLogModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 3 records
+  Memory: 42.5 MB (peak: 42.5 MB)
+..E
+Generating 5 TestUserModel records
+E
+Generating 10 TestMetricModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 10 records
+  Memory: 44.5 MB (peak: 44.5 MB)
+
+Generating 15 TestMetricModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 15 records
+  Memory: 44.5 MB (peak: 44.5 MB)
+.
+Generating 5 TestExportModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 5 records
+  Memory: 44.5 MB (peak: 44.5 MB)
+..F
+Generating 1000 TestPerformanceModel records
+[==================================================] 100% (1/1 chunks)
+✓ Generation complete
+  Generated: 1000 records
+  Memory: 46.5 MB (peak: 46.5 MB)
+...EFFF.FFE.....F....FF...FF...F...F..EFEE...FF.F 126 / 131 ( 96%)
+..F..                                                           131 / 131 (100%)
+
+Time: 00:01.212, Memory: 48.50 MB
+
+Basic Integration (LaravelMint\Tests\Integration\BasicIntegration)
+ ✔ Service provider loads correctly
+ ✔ Mint facade is accessible
+ ✔ Configuration is loaded
+ ✔ Commands are registered
+ ✔ Basic data generation
+ ✔ Data generation with custom attributes
+ ✔ Clear functionality
+ ✔ Analyze functionality
+ ✔ Batch generation
+ ✔ Performance for moderate dataset
+
+Data Generator (LaravelMint\Tests\Unit\DataGenerator)
+ ✔ Generator instance is created
+ ✔ Generate string field
+ ✔ Generate integer field
+ ✔ Generate boolean field
+ ✔ Generate decimal field
+ ✔ Generate datetime field
+ ✔ Generate json field
+ ✔ Generate email field
+ ✔ Generate url field
+ ✔ Generate phone field
+ ✔ Generate with constraints
+ ✔ Generate with enum constraint
+ ✔ Generate with pattern constraint
+ ✔ Generate unique values
+ ✔ Generate nullable field
+ ✔ Generate for model
+ ✔ Generate batch data
+ ✔ Generate with relationships
+ ↩ Generate with custom generator
+ ✔ Generate respects configuration
+ ✔ Generate with faker locale
+ ↩ Generate handles complex types
+ ✔ Generate incremental values
+ ↩ Generate weighted random
+
+Generate Data Feature (LaravelMint\Tests\Feature\GenerateDataFeature)
+ ✔ Generate command creates records
+ ✔ Generate command with attributes
+ ✘ Generate command with pattern
+   │
+   │ Symfony\Component\Console\Exception\InvalidOptionException: The "--pattern-config" option does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:154
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:121
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/Input.php:53
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Command/Command.php:289
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Command.php:182
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:1106
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:359
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:194
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:166
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:111
+   │
+ ✘ Generate command with relationships
+   │
+   │ Symfony\Component\Console\Exception\InvalidOptionException: The "--with-relationships" option does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:154
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:121
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/Input.php:53
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Command/Command.php:289
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Command.php:182
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:1106
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:359
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:194
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:166
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:133
+   │
+ ✘ Generate command performance mode
+   │
+   │ Symfony\Component\Console\Exception\InvalidOptionException: The "--chunk" option does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:154
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:121
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/Input.php:53
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Command/Command.php:289
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Command.php:182
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:1106
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:359
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:194
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:166
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:153
+   │
+ ✔ Generate command with seed
+ ✘ Analyze command provides insights
+   │
+   │ Failed asserting that 'Failed to analyze model: Array to string conversion\n
+   │ ' [ASCII](length: 52) contains "Model Analysis" [ASCII](length: 14).
+   │
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:210
+   │
+ ✔ Clear command removes records
+ ✘ Clear command with conditions
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: posts.content (Connection: testbench, SQL: insert into "posts" ("status", "title", "user_id") values (draft, Post 1, 1), (published, Post 2, 1), (draft, Post 3, 2))
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:239
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: posts.content
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:571
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:812
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:239
+   │
+ ✘ Import command loads data
+   │
+   │ Failed asserting that actual size 0 matches expected size 3.
+   │
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:277
+   │
+ ✔ Export command saves data
+ ✘ Scenario command runs preset
+   │
+   │ Symfony\Component\Console\Exception\InvalidOptionException: The "--scale" option does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:154
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:121
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/Input.php:53
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Command/Command.php:289
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Command.php:182
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:1106
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:359
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:194
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:166
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:317
+   │
+ ✘ Pattern list command
+   │
+   │ Symfony\Component\Console\Exception\CommandNotFoundException: The command "mint:pattern:list" does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:163
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:331
+   │
+ ✘ Batch generation workflow
+   │
+   │ Symfony\Component\Console\Exception\InvalidOptionException: The "--with-relationships" option does not exist.
+   │
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:154
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/ArrayInput.php:121
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Input/Input.php:53
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Command/Command.php:289
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Command.php:182
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:1106
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:359
+   │ /home/argent/laravel-mint/package/vendor/symfony/console/Application.php:194
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Console/Application.php:166
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php:427
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php:361
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:359
+   │
+ ✘ Error handling for invalid model
+   │
+   │ Failed asserting that 'Generating 10 App\Models\NonExistent records...\n
+   │ Failed to generate data: Model class App\Models\NonExistent does not exist\n
+   │ ' [ASCII](length: 123) contains "Error" [ASCII](length: 5).
+   │
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:396
+   │
+ ✘ Concurrent generation
+   │
+   │ Failed asserting that 0 matches expected 300.
+   │
+   │ /home/argent/laravel-mint/package/tests/Feature/GenerateDataFeatureTest.php:420
+   │
+
+Mint (LaravelMint\Tests\Unit\Mint)
+ ✔ Mint instance is created
+ ✘ Analyze model returns correct structure
+   │
+   │ [...] does not match expected type "string".
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:56
+   │
+ ✔ Generate creates specified number of records
+ ✘ Generate with custom attributes
+   │
+   │ Failed asserting that a NULL is not empty.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:90
+   │
+ ✘ Generate with pattern
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 table events has no column named mean (Connection: testbench, SQL: insert into "events" ("attendees", "created_at", "date", "mean", "name", "stddev", "updated_at") values (0.6232750882674, 2025-09-07 05:04:11, 2020-09-26 10:12:38, 100, Quisquam qui laboriosam aut laudantium atque aut non., 20, 2025-09-07 05:04:11), (-2.0400766693659, 2025-09-07 05:04:11, 1990-10-04 14:54:51, 100, Ut et quia ex dolore explicabo sequi dolor., 20, 2025-09-07 05:04:11), (0.97442759904889, 2025-09-07 05:04:11, 1982-05-07 23:37:05, 100, Ut saepe exercitationem ipsum ut nesciunt sunt quidem dicta., 20, 2025-09-07 05:04:11), (-1.8103113373612, 2025-09-07 05:04:11, 2018-03-01 02:44:08, 100, Et animi placeat nesciunt dolorem quas enim., 20, 2025-09-07 05:04:11), (1.0612036525621, 2025-09-07 05:04:11, 2018-09-07 04:29:55, 100, Eum voluptatem quam vitae voluptates nostrum voluptatem., 20, 2025-09-07 05:04:11), (1.2336790366208, 2025-09-07 05:04:11, 2008-12-27 02:17:28, 100, Voluptates aliquid culpa delectus architecto maiores nostrum voluptas beatae., 20, 2025-09-07 05:04:11), (-0.024113828412923, 2025-09-07 05:04:11, 1970-04-14 13:29:21, 100, At in vitae culpa id numquam dolores., 20, 2025-09-07 05:04:11), (-1.5490533229199, 2025-09-07 05:04:11, 2007-11-27 21:34:59, 100, Quia deserunt quo aliquam dolores tempore doloribus., 20, 2025-09-07 05:04:11), (1.9281458107486, 2025-09-07 05:04:11, 1972-06-14 21:51:07, 100, Facilis voluptas qui labore fugit quasi., 20, 2025-09-07 05:04:11), (0.85859897766942, 2025-09-07 05:04:11, 1978-07-26 21:47:15, 100, Dolorem facere et nam neque omnis., 20, 2025-09-07 05:04:11))
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2120
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:131
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:31
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:69
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:29
+   │ /home/argent/laravel-mint/package/src/Mint.php:77
+   │ /home/argent/laravel-mint/package/src/Mint.php:180
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:103
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[HY000]: General error: 1 table events has no column named mean
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:565
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:812
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2120
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:131
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:31
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:69
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:29
+   │ /home/argent/laravel-mint/package/src/Mint.php:77
+   │ /home/argent/laravel-mint/package/src/Mint.php:180
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:103
+   │
+ ✔ Clear removes all records
+ ✔ Clear with conditions
+ ✔ Seed uses database seeder
+ ✘ Run scenario executes successfully
+   │
+   │ InvalidArgumentException: Scenario 'test-scenario' not found
+   │
+   │ /home/argent/laravel-mint/package/src/Scenarios/ScenarioManager.php:74
+   │ /home/argent/laravel-mint/package/src/Mint.php:83
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:199
+   │
+ ✘ Batch generation creates multiple models
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.email (Connection: testbench, SQL: insert into "users" ("created_at", "name", "updated_at") values (2025-09-07 05:04:11, Vero et velit voluptatum nihil ratione non modi., 2025-09-07 05:04:11), (2025-09-07 05:04:11, Labore necessitatibus non corporis magni ut., 2025-09-07 05:04:11), (2025-09-07 05:04:11, Consequuntur modi illo facere nam soluta aut., 2025-09-07 05:04:11), (2025-09-07 05:04:11, Impedit sint quia eaque error quis., 2025-09-07 05:04:11), (2025-09-07 05:04:11, Voluptas quia natus tenetur non., 2025-09-07 05:04:11))
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2120
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:131
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:31
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:69
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:29
+   │ /home/argent/laravel-mint/package/src/Mint.php:77
+   │ /home/argent/laravel-mint/package/src/Mint.php:91
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:227
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: users.email
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:571
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:812
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:524
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Query/Builder.php:3717
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Builder.php:2120
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Support/Traits/ForwardsCalls.php:23
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2372
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php:2384
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:131
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:31
+   │ /home/argent/laravel-mint/package/src/Generators/DataGenerator.php:69
+   │ /home/argent/laravel-mint/package/src/Generators/SimpleGenerator.php:29
+   │ /home/argent/laravel-mint/package/src/Mint.php:77
+   │ /home/argent/laravel-mint/package/src/Mint.php:91
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:227
+   │
+ ✔ Get statistics returns metrics
+ ✔ Export data creates file
+ ✔ Import data creates records
+ ✘ Cache is used for repeated operations
+   │
+   │ Failed asserting that two arrays are equal.
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │      'relationships' => Array (
+   │          'model' => 'TestCachedModel'
+   │          'relationships' => []
+   │ -        'dependencies' => [...]
+   │ -        'generation_order' => [...]
+   │ -        'depth' => 0
+   │ +        'circular_reference' => true
+   │      )
+   │      'table' => 'cacheds'
+   │      'attributes' => []
+   │  )
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/MintTest.php:314
+   │
+ ✔ Performance for large datasets
+
+Mint Service Provider (LaravelMint\Tests\Unit\MintServiceProvider)
+ ✔ Service provider is registered
+ ✔ Mint facade is registered
+ ✔ Config is loaded
+ ✔ Commands are registered
+
+Model Analyzer (LaravelMint\Tests\Unit\ModelAnalyzer)
+ ✔ Analyzer instance is created
+ ✔ Analyze model structure
+ ✘ Detect attribute types
+   │
+   │ ErrorException: Undefined array key "string_field"
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/HandleExceptions.php:258
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:89
+   │
+ ✘ Detect nullable fields
+   │
+   │ Failed asserting that true is false.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:120
+   │
+ ✘ Detect unique constraints
+   │
+   │ Failed asserting that false is true.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:140
+   │
+ ✘ Detect default values
+   │
+   │ Failed asserting that null matches expected 'active'.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:160
+   │
+ ✔ Detect belongs to relationship
+ ✘ Detect has many relationship
+   │
+   │ Failed asserting that an array has the key 'comments'.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:208
+   │
+ ✘ Detect many to many relationship
+   │
+   │ Failed asserting that two strings are equal.
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │ -'belongsToMany'
+   │ +'belongsTo'
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:228
+   │
+ ✘ Detect indexes
+   │
+   │ Illuminate\Database\QueryException: SQLSTATE[HY000]: General error: 1 duplicate column name: created_at (Connection: testbench, SQL: create table "indextests" ("id" integer primary key autoincrement not null, "email" varchar, "status" varchar, "created_at" datetime, "created_at" datetime, "updated_at" datetime))
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:825
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php:118
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:564
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:418
+   │ /home/argent/laravel-mint/package/tests/Helpers/TestModelFactory.php:27
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:233
+   │  
+   │ Caused by:
+   │ PDOException: SQLSTATE[HY000]: General error: 1 duplicate column name: created_at
+   │
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:565
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:812
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:779
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Connection.php:560
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Blueprint.php:118
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:564
+   │ /home/argent/laravel-mint/package/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php:418
+   │ /home/argent/laravel-mint/package/tests/Helpers/TestModelFactory.php:27
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:233
+   │
+ ✔ Detect fillable and guarded
+ ✔ Detect casts
+ ✔ Analyze table size
+ ✔ Detect scopes
+ ✔ Detect accessors and mutators
+ ✘ Analyze validation rules
+   │
+   │ Failed asserting that an array has the key 'email'.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ModelAnalyzerTest.php:366
+   │
+ ✔ Performance analysis
+
+Pattern Integration (LaravelMint\Tests\Integration\PatternIntegration)
+ ✔ Generate with normal distribution pattern
+ ✔ Generate with seasonal pattern
+ ✔ Composite pattern integration
+ ✔ Pattern with relationships
+ ✔ Batch generation with patterns
+ ✔ Pattern caching performance
+ ✔ Pattern error handling
+ ✔ Dynamic pattern registration
+ ✔ Pattern with multiple fields
+
+Pattern Registry (LaravelMint\Tests\Unit\PatternRegistry)
+ ✔ Registry instance is created
+ ✔ Register pattern
+ ✔ Get registered pattern
+ ✘ Get nonexistent pattern throws exception
+   │
+   │ Failed asserting that exception message 'Pattern nonexistent is not registered' contains 'Pattern not found: nonexistent'.
+
+   │
+ ✘ List all patterns
+   │
+   │ Failed asserting that actual size 9 matches expected size 2.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/PatternRegistryTest.php:83
+   │
+ ✔ Remove pattern
+ ✔ Normal distribution pattern
+ ✔ Exponential distribution pattern
+ ✘ Seasonal pattern
+   │
+   │ Failed asserting that 101.49149850871869 is greater than 102.12139697130135.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/PatternRegistryTest.php:153
+   │
+ ✘ Weekly pattern
+   │
+   │ Failed asserting that 0.7 is greater than 1.0.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/PatternRegistryTest.php:169
+   │
+ ✔ Composite pattern
+ ✔ Pattern with constraints
+ ✔ Pattern configuration
+ ✘ Pattern validation
+   │
+   │ Failed asserting that exception of type "InvalidArgumentException" is thrown.
+
+   │
+ ✔ Register custom pattern class
+ ✔ Pattern serialization
+ ✔ Load patterns from config
+ ✘ Pattern factory
+   │
+   │ Failed asserting that an instance of anonymous class created at LaravelMint\Patterns\PatternInterface@anonymous /home/argent/laravel-mint/package/src/Patterns/PatternRegistry.php:292 is an instance of class LaravelMint\Patterns\Distributions\NormalDistribution.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/PatternRegistryTest.php:317
+   │
+
+Scenario Manager (LaravelMint\Tests\Unit\ScenarioManager)
+ ✔ Manager instance is created
+ ✔ Register scenario
+ ✘ Get registered scenario
+   │
+   │ Mockery\Exception\BadMethodCallException: Received Mockery_0_LaravelMint_Scenarios_ScenarioInterface::getDescription(), but no expectations were specified
+   │
+   │ /home/argent/laravel-mint/package/src/Scenarios/ScenarioManager.php:127
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:70
+   │
+ ✘ List all scenarios
+   │
+   │ Failed asserting that actual size 6 matches expected size 2.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:92
+   │
+ ✘ Run scenario
+   │
+   │ Mockery\Exception\BadMethodCallException: Received Mockery_0_LaravelMint_Scenarios_ScenarioInterface::getDescription(), but no expectations were specified
+   │
+   │ /home/argent/laravel-mint/package/src/Scenarios/ScenarioManager.php:127
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:109
+   │
+ ✘ Run scenario with options
+   │
+   │ Mockery\Exception\BadMethodCallException: Received Mockery_0_LaravelMint_Scenarios_ScenarioInterface::getDescription(), but no expectations were specified
+   │
+   │ /home/argent/laravel-mint/package/src/Scenarios/ScenarioManager.php:127
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:128
+   │
+ ✔ Scenario builder creates scenario
+ ✔ Scenario validator validates config
+ ✔ Base scenario implementation
+ ✘ Ecommerce scenario preset
+   │
+   │ Failed asserting that two strings are equal.
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │ -'ecommerce'
+   │ +'E-commerce Store'
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:232
+   │
+ ✘ Saas scenario preset
+   │
+   │ Failed asserting that two strings are equal.
+   │ --- Expected
+   │ +++ Actual
+   │ @@ @@
+   │ -'saas'
+   │ +'SaaS Application'
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:254
+   │
+ ✔ Scenario with patterns
+ ✘ Scenario with callbacks
+   │
+   │ Failed asserting that false is true.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:362
+   │
+ ✔ Scenario error handling
+ ✔ Scenario with transactions
+ ✘ Load scenarios from config
+   │
+   │ Failed asserting that false is true.
+   │
+   │ /home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:443
+   │
+ ✔ Scenario result object
+ ✔ Scenario performance
+
+There were 3 risky tests:
+
+1) LaravelMint\Tests\Unit\MintTest::test_run_scenario_executes_successfully
+* Test code or tested code did not remove its own error handlers
+
+* Test code or tested code did not remove its own exception handlers
+
+/home/argent/laravel-mint/package/tests/Unit/MintTest.php:175
+
+2) LaravelMint\Tests\Unit\ScenarioManagerTest::test_run_scenario
+* Test code or tested code did not remove its own error handlers
+
+* Test code or tested code did not remove its own exception handlers
+
+/home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:98
+
+3) LaravelMint\Tests\Unit\ScenarioManagerTest::test_run_scenario_with_options
+* Test code or tested code did not remove its own error handlers
+
+* Test code or tested code did not remove its own exception handlers
+
+/home/argent/laravel-mint/package/tests/Unit/ScenarioManagerTest.php:117
+
+ERRORS!
+Tests: 131, Assertions: 1107, Errors: 15, Failures: 24, Skipped: 3, Risky: 3.

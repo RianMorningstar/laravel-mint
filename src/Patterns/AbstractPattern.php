@@ -135,4 +135,12 @@ abstract class AbstractPattern implements PatternInterface
 
         return $value;
     }
+
+    /**
+     * Get configuration array
+     */
+    public function getConfiguration(): array
+    {
+        return $this->config;
+    }
 }
