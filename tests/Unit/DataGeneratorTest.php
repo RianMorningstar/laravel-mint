@@ -379,6 +379,7 @@ class TestableDataGenerator extends SimpleGenerator
         if ($fieldName === 'phone_number') {
             // Generate a phone number and replace dots with dashes for consistent format
             $phone = $this->faker->phoneNumber();
+
             return str_replace('.', '-', $phone);
         }
 
