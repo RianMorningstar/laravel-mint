@@ -74,7 +74,8 @@ class MintTest extends TestCase
 
     public function test_generate_with_custom_attributes()
     {
-        $modelClass = TestModelFactory::create('Book', [
+        // Use a unique model name to avoid table conflicts
+        $modelClass = TestModelFactory::create('BookCustomAttrs', [
             'title' => 'string',
             'author' => 'string',
             'isbn' => 'string',
